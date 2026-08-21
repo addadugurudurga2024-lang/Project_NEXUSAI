@@ -1,0 +1,129 @@
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.models.employee import EmployeeCreate, EmployeeUpdate, EmployeeResponse
+from app.core.deps import get_current_user, require_manager_or_admin
+from app.db.database import get_database
+# pyrefly: ignore [missing-import]
+from bson import ObjectId
+from datetime import datetime
+from typing import List, Optional
+
+router = APIRouter()
+
+
+def serialize_employee(e: dict) -> dict:
+    return {
+        "id": str(e["_id"]),
+        "name": e.get("name", ""),
+        "email": e.get("email", ""),
+        "role": e.get("role", ""),
+        "specialization": e.get("specialization"),
+        "skills": e.get("skills", []),
+        "experience_years": e.get("experience_years", 0.0),
+        "weekly_capacity_hours": e.get("weekly_capacity_hours", 40.0),
+        "availability_percentage": e.get("availability_percentage", 100.0),
+        "status": e.get("status", "active"),
+        "user_id": e.get("user_id"),
+        "assigned_project_ids": e.get("assigned_project_ids", []),
+        "created_at": e.get("created_at"),
+    }
+
+
+@router.get("/", response_model=List[EmployeeResponse])
+async def list_employees(
+    status: Optional[str] = None,
+    current_user=Depends(get_current_user),
+    db=Depends(get_database),
+):
+    query = {}
+    if status:
+        query["status"] = status
+    employees = await db.employees.find(query).sort("name", 1).to_list(200)
+    return [serialize_employee(e) for e in employees]
+
+
+@router.post("/", response_model=EmployeeResponse)
+async def create_employee(
+    data: EmployeeCreate,
+    current_user=Depends(require_manager_or_admin),
+    db=Depends(get_database),
+):
+    existing = await db.employees.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Employee with this email already exists")
+    doc = data.model_dump()
+    doc["assigned_project_ids"] = []
+    doc["created_at"] = datetime.utcnow()
+    result = await db.employees.insert_one(doc)
+    doc["_id"] = result.inserted_id
+    return serialize_employee(doc)
+
+
+@router.get("/{employee_id}", response_model=EmployeeResponse)
+async def get_employee(
+    employee_id: str,
+    current_user=Depends(get_current_user),
+    db=Depends(get_database),
+):
+    try:
+        e = await db.employees.find_one({"_id": ObjectId(employee_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid employee ID")
+    if not e:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return serialize_employee(e)
+
+
+@router.put("/{employee_id}", response_model=EmployeeResponse)
+async def update_employee(
+    employee_id: str,
+    data: EmployeeUpdate,
+    current_user=Depends(require_manager_or_admin),
+    db=Depends(get_database),
+):
+    try:
+        e = await db.employees.find_one({"_id": ObjectId(employee_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid employee ID")
+    if not e:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    await db.employees.update_one({"_id": ObjectId(employee_id)}, {"$set": update_data})
+    updated = await db.employees.find_one({"_id": ObjectId(employee_id)})
+    return serialize_employee(updated)
+
+
+@router.delete("/{employee_id}")
+async def delete_employee(
+    employee_id: str,
+    current_user=Depends(require_manager_or_admin),
+    db=Depends(get_database),
+):
+    try:
+        result = await db.employees.delete_one({"_id": ObjectId(employee_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid employee ID")
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return {"message": "Employee deleted successfully"}
+
+
+@router.post("/{employee_id}/assign-project/{project_id}")
+async def assign_project(
+    employee_id: str,
+    project_id: str,
+    current_user=Depends(require_manager_or_admin),
+    db=Depends(get_database),
+):
+    try:
+        await db.employees.update_one(
+            {"_id": ObjectId(employee_id)},
+            {"$addToSet": {"assigned_project_ids": project_id}},
+        )
+        await db.projects.update_one(
+            {"_id": ObjectId(project_id)},
+            {"$addToSet": {"team_member_ids": employee_id}},
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    return {"message": "Employee assigned to project"}

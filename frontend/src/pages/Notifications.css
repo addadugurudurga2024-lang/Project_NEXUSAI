@@ -1,0 +1,218 @@
+.notif-page {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.notif-page h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #e2e8f0);
+  margin: 0 0 0.3rem 0;
+}
+
+.notif-page p {
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.notif-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+}
+
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  min-width: 1.4rem;
+  line-height: 1;
+}
+
+/* --- List --- */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.notif-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.notif-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+.notif-card.unread {
+  border-left: 3px solid #6366f1;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.notif-card.severity-critical { border-left-color: #ef4444; background: rgba(239,68,68,0.05); }
+.notif-card.severity-high     { border-left-color: #f59e0b; background: rgba(245,158,11,0.05); }
+.notif-card.severity-medium   { border-left-color: #6366f1; }
+.notif-card.severity-low      { border-left-color: #10b981; background: rgba(16,185,129,0.04); }
+
+.notif-left {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.notif-icon { opacity: 0.85; }
+.notif-icon.error   { color: #ef4444; }
+.notif-icon.warning { color: #f59e0b; }
+.notif-icon.primary { color: #6366f1; }
+.notif-icon.success { color: #10b981; }
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.notif-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #e2e8f0);
+  margin: 0;
+}
+
+.notif-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.notif-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.severity-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sev-critical { background: rgba(239,68,68,0.18); color: #fca5a5; }
+.sev-high     { background: rgba(245,158,11,0.18); color: #fcd34d; }
+.sev-medium   { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+.sev-low      { background: rgba(16,185,129,0.18); color: #6ee7b7; }
+
+.notif-message {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.5;
+}
+
+.notif-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.notif-type-label {
+  font-size: 0.72rem;
+  text-transform: capitalize;
+  color: #64748b;
+}
+
+.mark-read-btn {
+  background: none;
+  border: 1px solid rgba(99,102,241,0.35);
+  color: #a5b4fc;
+  border-radius: 5px;
+  padding: 0.2rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.mark-read-btn:hover {
+  background: rgba(99,102,241,0.15);
+}
+
+.read-label {
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.empty-icon { color: #475569; }
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  color: var(--text-primary, #e2e8f0);
+  margin: 0;
+}
+
+.empty-state p {
+  color: var(--text-secondary, #94a3b8);
+  max-width: 380px;
+}
