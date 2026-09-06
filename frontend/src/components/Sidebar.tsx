@@ -79,10 +79,12 @@ const Sidebar: React.FC = () => {
           <BrainCircuit size={20} />
           <span>AI Insights</span>
         </NavLink>
-        <NavLink to="/dashboard/resource-optimization" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Network size={20} />
-          <span>Optimization</span>
-        </NavLink>
+        {isManager && (
+          <NavLink to="/dashboard/resource-optimization" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Network size={20} />
+            <span>Optimization</span>
+          </NavLink>
+        )}
         {isManager && (
           <NavLink to="/dashboard/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <BarChart3 size={20} />

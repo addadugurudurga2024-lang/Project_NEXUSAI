@@ -29,7 +29,7 @@ async def signup(data: UserCreate, db=Depends(get_database)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-    
+
     role_str = data.role.value if hasattr(data.role, "value") else str(data.role)
 
     # Task 10: Prevent unrestricted public Admin creation
@@ -40,7 +40,27 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin accounts cannot be registered publicly. Must be created by an existing administrator.",
             )
-    
+
+    # Validate required employee fields for team_member at signup
+    if role_str == "team_member":
+        missing = []
+        if not data.job_role or not data.job_role.strip():
+            missing.append("job_role")
+        if not data.specialization or not data.specialization.strip():
+            missing.append("specialization")
+        if not data.skills:
+            missing.append("at least one skill")
+        if data.weekly_capacity_hours <= 0 or data.weekly_capacity_hours > 168:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="weekly_capacity_hours must be between 1 and 168",
+            )
+        if missing:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Team members must provide: {', '.join(missing)}",
+            )
+
     doc = {
         "name": data.name,
         "email": data.email,
@@ -51,8 +71,46 @@ async def signup(data: UserCreate, db=Depends(get_database)):
     }
     result = await db.users.insert_one(doc)
     doc["_id"] = result.inserted_id
-    
-    token = create_access_token({"sub": str(doc["_id"]), "role": role_str})
+    user_id_str = str(result.inserted_id)
+
+    # -------------------------------------------------------
+    # Auto-create Employee record for team_member signups
+    # -------------------------------------------------------
+    if role_str == "team_member":
+        # Dedup guard: check if an employee already exists for this email
+        existing_emp = await db.employees.find_one({"email": data.email})
+        if existing_emp:
+            # Link the existing employee to the new user account
+            await db.employees.update_one(
+                {"_id": existing_emp["_id"]},
+                {"$set": {"user_id": user_id_str}},
+            )
+        else:
+            employee_doc = {
+                "name": data.name,
+                "email": data.email,
+                "role": data.job_role.strip(),          # job title e.g. "Cybersecurity Engineer"
+                "specialization": data.specialization.strip() if data.specialization else None,
+                "skills": data.skills,
+                "experience_years": 0.0,
+                "weekly_capacity_hours": data.weekly_capacity_hours,
+                "availability_percentage": 100.0,
+                "status": "active",
+                "user_id": user_id_str,
+                "assigned_project_ids": [],
+                "created_at": datetime.utcnow(),
+            }
+            try:
+                await db.employees.insert_one(employee_doc)
+            except Exception as emp_err:
+                # Rollback: remove the user to avoid orphaned account
+                await db.users.delete_one({"_id": result.inserted_id})
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Account creation failed: could not create employee profile. Please try again.",
+                )
+
+    token = create_access_token({"sub": user_id_str, "role": role_str})
     return {"access_token": token, "token_type": "bearer", "user": serialize_user(doc)}
 
 

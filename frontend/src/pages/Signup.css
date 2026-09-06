@@ -1,0 +1,152 @@
+/* ── Signup-specific overrides ────────────────────────────────────────── */
+
+/* Widen the panel when team-member fields are visible */
+.signup-wide {
+  max-width: 520px;
+}
+
+/* Team Member extra fields section */
+.team-member-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-md);
+  animation: fadeSlideDown 0.3s ease;
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Section divider with label */
+.tm-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tm-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.tm-section-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* Skills row: dropdown + Add button */
+.skill-selector-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.skill-dropdown {
+  flex: 1;
+}
+
+.skill-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.skill-add-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.skill-add-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Custom skill text input (shown when "Other / Custom" selected) */
+.custom-skill-input {
+  margin-top: 0.4rem;
+  background: rgba(15, 17, 26, 0.5);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.custom-skill-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Selected skill tags */
+.selected-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: #a5b4fc;
+  font-weight: 500;
+  animation: tagPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes tagPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.skill-remove-btn {
+  background: none;
+  border: none;
+  color: rgba(165, 180, 252, 0.6);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.skill-remove-btn:hover {
+  color: #ef4444;
+}
+
+/* Hint text below empty skills list */
+.skills-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}

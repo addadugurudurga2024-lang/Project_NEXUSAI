@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert, Flame, BrainCircuit, Activity } from 'lucide-react';
+import { ShieldAlert, Flame, BrainCircuit, Activity, UserPlus } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Employees.css';
 
 const Employees: React.FC = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const isManager = user?.role === 'project_manager' || user?.role === 'admin';
 
   const fetchEmployees = async () => {
     try {
       const response = await api.get('/employees/');
-      
+
       const enriched = await Promise.all(response.data.map(async (emp: any) => {
         try {
           const predRes = await api.get(`/employee-risk/${emp.id}/latest`);
@@ -19,7 +23,7 @@ const Employees: React.FC = () => {
           return { ...emp, risk: null };
         }
       }));
-      
+
       setEmployees(enriched);
     } catch (err) {
       console.error('Failed to fetch employees', err);
@@ -47,7 +51,13 @@ const Employees: React.FC = () => {
           <h1>Team Intelligence</h1>
           <p>Workload and burnout risk monitoring</p>
         </div>
-        <button className="primary-button">Add Member</button>
+        {/* Only admin / project_manager can add members */}
+        {isManager && (
+          <button className="primary-button" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <UserPlus size={16} />
+            Add Member
+          </button>
+        )}
       </div>
 
       <div className="employees-grid">
@@ -61,6 +71,14 @@ const Employees: React.FC = () => {
               </div>
               <span className={`status-dot ${emp.status}`} />
             </div>
+
+            {/* Specialization badge */}
+            {emp.specialization && (
+              <div className="emp-specialization">
+                <span className="spec-label">Specialization</span>
+                <span className="spec-value">{emp.specialization}</span>
+              </div>
+            )}
 
             <div className="skills-container">
               {emp.skills.map((skill: string) => (
@@ -84,7 +102,7 @@ const Employees: React.FC = () => {
                   </div>
                   <span className="prob-value">{(emp.risk.risk_probability * 100).toFixed(0)}%</span>
                 </div>
-                
+
                 <ul className="factors-list">
                   {emp.risk.contributing_factors.slice(0, 3).map((factor: string, i: number) => (
                     <li key={i}>{factor}</li>
@@ -95,7 +113,7 @@ const Employees: React.FC = () => {
 
             {!emp.risk && (
               <div className="burnout-insights empty">
-                <button 
+                <button
                   className="analyze-button"
                   onClick={async () => {
                     await api.post(`/employee-risk/analyze/${emp.id}`);

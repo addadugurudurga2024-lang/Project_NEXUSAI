@@ -10,7 +10,7 @@ router = APIRouter()
 @router.get("/{project_id}")
 async def get_resource_optimization(
     project_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_manager_or_admin),
     db=Depends(get_database),
 ):
     """Compute resource optimization recommendations for a project."""

@@ -36,6 +36,14 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Blocks team_member from management-only pages
+const ManagerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user?.role === 'team_member') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -55,7 +63,7 @@ function App() {
             <Route path="issues" element={<Issues />} />
             <Route path="documents" element={<DocumentAI />} />
             <Route path="recommendations" element={<Recommendations />} />
-            <Route path="resource-optimization" element={<ResourceOptimization />} />
+            <Route path="resource-optimization" element={<ManagerRoute><ResourceOptimization /></ManagerRoute>} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="reports" element={<Reports />} />
           </Route>

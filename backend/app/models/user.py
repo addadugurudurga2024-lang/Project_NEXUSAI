@@ -16,6 +16,10 @@ class UserCreate(BaseModel):
     password: str
     role: UserRole = UserRole.team_member
     specialization: Optional[str] = None
+    # Team member employee profile fields (required when role=team_member)
+    job_role: Optional[str] = None
+    skills: List[str] = []
+    weekly_capacity_hours: float = 40.0
 
 
 class UserUpdate(BaseModel):
