@@ -1,10 +1,14 @@
 import asyncio
 import os
 import sys
+
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient
-import httpx
+from motor.motor_asyncio import AsyncIOMotorClient  # pyright: ignore[reportMissingImports]
+import httpx  # pyright: ignore[reportMissingImports]
 
 API_BASE = "http://localhost:8000"
 
@@ -73,7 +77,10 @@ async def run_audit():
             "email": test_mem_email,
             "password": "Password123!",
             "role": "team_member",
-            "specialization": "Frontend"
+            "job_role": "Software Engineer",
+            "specialization": "Frontend",
+            "skills": ["React", "TypeScript"],
+            "weekly_capacity_hours": 40.0
         })
         assert mem_resp.status_code == 200
         mem_token = mem_resp.json()["access_token"]

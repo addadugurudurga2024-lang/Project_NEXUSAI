@@ -57,10 +57,13 @@ async def generate_report(
 @router.get("/")
 async def list_reports(
     project_id: Optional[str] = None,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_manager_or_admin),
     db=Depends(get_database),
 ):
     """List all generated reports, optionally filtered by project."""
+    if current_user.get("role") not in ["admin", "project_manager"]:
+        raise HTTPException(status_code=403, detail="Manager or Admin access required")
+
     query = {}
     if project_id:
         query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
@@ -72,10 +75,13 @@ async def list_reports(
 @router.get("/{report_id}")
 async def get_report(
     report_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_manager_or_admin),
     db=Depends(get_database),
 ):
     """Get a specific report by ID."""
+    if current_user.get("role") not in ["admin", "project_manager"]:
+        raise HTTPException(status_code=403, detail="Manager or Admin access required")
+
     try:
         report = await db.reports.find_one({"_id": ObjectId(report_id)})
     except Exception:

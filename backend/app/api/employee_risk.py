@@ -1,9 +1,14 @@
+"""
+Employee Risk API — Burnout & Workload Risk prediction endpoints.
+Routes align with what the frontend actually calls.
+"""
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.deps import get_current_user
 from app.db.database import get_database
 # pyrefly: ignore [missing-import]
 from bson import ObjectId
 from datetime import datetime
+
 router = APIRouter()
 
 import sys
@@ -39,7 +44,6 @@ async def _gather_employee_features(employee_id: str, db) -> dict:
 
     # Active projects
     active_project_ids = list(set(t.get("project_id") for t in active_tasks if t.get("project_id")))
-    assigned_project_ids = employee.get("assigned_project_ids", [])
 
     # Sprint load
     sprint_tasks = [t for t in active_tasks if t.get("sprint_id")]
@@ -81,6 +85,105 @@ async def _gather_employee_features(employee_id: str, db) -> dict:
     }
 
 
+def _build_recommendation(risk_level: str, workload_stats: dict, employee_name: str) -> str:
+    """Generate dynamic text recommendation based on risk level and workload stats."""
+    wl = workload_stats
+    utilization = wl.get("workload_ratio", 0)
+    available_hours = max(0, wl.get("weekly_capacity", 40) - wl.get("estimated_hours", 0))
+    overdue = wl.get("overdue_tasks", 0)
+    active = wl.get("active_tasks", 0)
+
+    if risk_level == "HIGH":
+        return (
+            f"{employee_name} is showing high workload stress ({utilization:.0f}% utilization, "
+            f"{overdue} overdue task(s)). Immediately reassign non-critical tasks and consider "
+            f"blocking new assignments until workload drops below 90%."
+        )
+    elif risk_level == "MEDIUM":
+        if available_hours > 0:
+            return (
+                f"{employee_name} can accept limited additional work ({available_hours:.1f}h available), "
+                f"but avoid assigning multiple high-priority tasks simultaneously. Monitor weekly."
+            )
+        else:
+            return (
+                f"{employee_name} is near full capacity ({utilization:.0f}%). "
+                f"Avoid adding new tasks this sprint. Review {overdue} overdue item(s) first."
+            )
+    else:
+        return (
+            f"{employee_name} has manageable workload ({utilization:.0f}% utilization, "
+            f"{available_hours:.1f}h available). Suitable for additional task assignment "
+            f"matching their skill set."
+        )
+
+
+async def _run_and_persist_prediction(employee_id: str, db) -> dict:
+    """Core prediction logic shared by all prediction endpoints."""
+    from ml.inference.burnout_risk import predict_burnout_risk
+
+    gathered = await _gather_employee_features(employee_id, db)
+    features = gathered["features"]
+    employee = gathered["employee"]
+    workload_stats = gathered["workload_stats"]
+
+    # Run ML inference
+    burnout_result = predict_burnout_risk(features)
+    employee_name = employee.get("name", "Employee")
+
+    recommendation = _build_recommendation(
+        burnout_result["risk_level"], workload_stats, employee_name
+    )
+
+    prediction_doc = {
+        "employee_id": employee_id,
+        "employee_name": employee_name,
+        "risk_level": burnout_result["risk_level"],
+        "risk_probability": burnout_result["risk_probability"],
+        "contributing_factors": burnout_result["contributing_factors"],
+        "workload_stats": workload_stats,
+        "features_used": features,
+        "model_name": burnout_result.get("model_name", "RandomForestClassifier"),
+        "model_version": burnout_result.get("model_version", "1.0"),
+        "is_demo": burnout_result.get("is_demo", True),
+        "recommendation": recommendation,
+        "disclaimer": (
+            "This is a workload-based burnout risk indicator. "
+            "It is NOT a medical or psychological diagnosis."
+        ),
+        "created_at": datetime.utcnow(),
+    }
+
+    await db.employee_risk_predictions.replace_one(
+        {"employee_id": employee_id},
+        prediction_doc,
+        upsert=True,
+    )
+
+    # Generate notification for high risk (notify managers/admins)
+    if burnout_result["risk_level"] == "HIGH":
+        await db.notifications.insert_one({
+            "type": "high_burnout_risk",
+            "title": f"Burnout Risk Alert: {employee_name}",
+            "message": (
+                f"{employee_name} has been flagged with HIGH burnout risk "
+                f"(workload: {workload_stats['workload_ratio']:.0f}%)."
+            ),
+            "employee_id": employee_id,
+            "severity": "high",
+            "isRead": False,
+            "read": False,
+            "createdAt": datetime.utcnow(),
+            "created_at": datetime.utcnow(),
+        })
+
+    return prediction_doc
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ROUTES
+# ─────────────────────────────────────────────────────────────────────────────
+
 @router.get("/workload")
 async def get_all_employee_workload(
     current_user=Depends(get_current_user),
@@ -113,52 +216,46 @@ async def predict_employee_burnout(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Run burnout risk prediction for an employee."""
-    from ml.inference.burnout_risk import predict_burnout_risk
+    """Run burnout risk prediction for an employee (canonical endpoint)."""
+    return await _run_and_persist_prediction(employee_id, db)
 
-    gathered = await _gather_employee_features(employee_id, db)
-    features = gathered["features"]
-    employee = gathered["employee"]
-    workload_stats = gathered["workload_stats"]
 
-    # Run inference
-    burnout_result = predict_burnout_risk(features)
+@router.post("/analyze/{employee_id}")
+async def analyze_workload_risk(
+    employee_id: str,
+    current_user=Depends(get_current_user),
+    db=Depends(get_database),
+):
+    """
+    Analyze workload risk for an employee.
+    Frontend-facing alias for POST /employee/{employee_id}.
+    Returns richer response including workload details for the UI panel.
+    """
+    prediction = await _run_and_persist_prediction(employee_id, db)
 
-    # Persist
-    prediction_doc = {
-        "employee_id": employee_id,
-        "employee_name": employee.get("name"),
-        "risk_level": burnout_result["risk_level"],
-        "risk_probability": burnout_result["risk_probability"],
-        "contributing_factors": burnout_result["contributing_factors"],
-        "workload_stats": workload_stats,
-        "features_used": features,
-        "model_name": burnout_result.get("model_name", "RandomForest"),
-        "model_version": burnout_result.get("model_version", "1.0"),
-        "is_demo": burnout_result.get("is_demo", True),
-        "disclaimer": "This is a workload-based burnout risk indicator. It is NOT a medical or psychological diagnosis.",
-        "created_at": datetime.utcnow(),
+    # Return the full enriched response for the frontend workload panel
+    ws = prediction["workload_stats"]
+    return {
+        **prediction,
+        "workload": {
+            "assigned_hours": ws.get("estimated_hours", 0),
+            "weekly_capacity": ws.get("weekly_capacity", 40),
+            "utilization_pct": round(ws.get("workload_ratio", 0), 1),
+            "available_hours": max(0, ws.get("weekly_capacity", 40) - ws.get("estimated_hours", 0)),
+            "overtime_hours": ws.get("overtime_hours", 0),
+        },
+        "tasks": {
+            "total": ws.get("active_tasks", 0) + ws.get("completed_tasks", 0),
+            "active": ws.get("active_tasks", 0),
+            "completed": ws.get("completed_tasks", 0),
+            "overdue": ws.get("overdue_tasks", 0),
+            "high_priority": ws.get("high_priority_tasks", 0),
+        },
+        "risk": {
+            "level": prediction["risk_level"],
+            "probability": prediction["risk_probability"],
+        },
     }
-
-    await db.employee_risk_predictions.replace_one(
-        {"employee_id": employee_id},
-        prediction_doc,
-        upsert=True,
-    )
-
-    # Generate notification if high risk
-    if burnout_result["risk_level"] == "HIGH":
-        await db.notifications.insert_one({
-            "type": "high_burnout_risk",
-            "title": f"Burnout Risk Alert: {employee.get('name')}",
-            "message": f"{employee.get('name')} has been flagged with HIGH burnout risk (workload: {workload_stats['workload_ratio']:.0f}%).",
-            "employee_id": employee_id,
-            "severity": "high",
-            "read": False,
-            "created_at": datetime.utcnow(),
-        })
-
-    return prediction_doc
 
 
 @router.get("/employee/{employee_id}/latest")
@@ -167,9 +264,34 @@ async def get_employee_prediction(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    """Get the latest stored prediction for an employee."""
     pred = await db.employee_risk_predictions.find_one({"employee_id": employee_id})
     if not pred:
-        raise HTTPException(status_code=404, detail="No prediction found. Run prediction first.")
+        raise HTTPException(
+            status_code=404,
+            detail="No prediction found. Click 'Analyze Workload Risk' to run analysis."
+        )
+    pred["id"] = str(pred["_id"])
+    del pred["_id"]
+    return pred
+
+
+@router.get("/{employee_id}/latest")
+async def get_employee_prediction_alias(
+    employee_id: str,
+    current_user=Depends(get_current_user),
+    db=Depends(get_database),
+):
+    """
+    Alias: GET /{employee_id}/latest
+    Frontend calls this URL; maps to the canonical /employee/{employee_id}/latest.
+    """
+    pred = await db.employee_risk_predictions.find_one({"employee_id": employee_id})
+    if not pred:
+        raise HTTPException(
+            status_code=404,
+            detail="No prediction found. Click 'Analyze Workload Risk' to run analysis."
+        )
     pred["id"] = str(pred["_id"])
     del pred["_id"]
     return pred

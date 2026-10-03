@@ -38,6 +38,7 @@ async def list_recommendations(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
     query = {}
     if project_id:
         query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
@@ -45,6 +46,21 @@ async def list_recommendations(
         query["status"] = status
     if priority:
         query["priority"] = priority
+
+    if role == "team_member":
+        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+        if emp:
+            emp_id = str(emp["_id"])
+            assigned_projects = await db.projects.find({"team_member_ids": emp_id}).to_list(100)
+            proj_ids = [str(p["_id"]) for p in assigned_projects]
+            if "$or" in query:
+                # If specific project requested, verify user belongs to it
+                if project_id not in proj_ids:
+                    return []
+            else:
+                query["$or"] = [{"projectId": {"$in": proj_ids}}, {"project_id": {"$in": proj_ids}}]
+        else:
+            return []
 
     recs = await db.recommendations.find(query).sort("createdAt", -1).to_list(500)
     return [serialize_rec(r) for r in recs]

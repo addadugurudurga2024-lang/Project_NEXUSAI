@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrainCircuit, AlertTriangle, ArrowRight, CheckCircle, Zap, Check, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle, Zap, Check, X } from 'lucide-react';
 import api from '../services/api';
 import './Recommendations.css';
 

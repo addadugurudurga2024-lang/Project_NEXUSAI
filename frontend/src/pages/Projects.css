@@ -501,3 +501,94 @@
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Phase 6: Activity Panel ──────────────────────────── */
+.action-btn.activity-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.25);
+  color: var(--primary);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.action-btn.activity-btn:hover {
+  background: rgba(99,102,241,0.18);
+  border-color: var(--primary);
+}
+
+.project-activity-panel {
+  margin-top: 0.75rem;
+  background: rgba(10,12,22,0.5);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.activity-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.85rem;
+}
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.activity-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.activity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.activity-message {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.activity-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.activity-loading,
+.activity-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0.5rem 0;
+}
+

@@ -179,3 +179,244 @@
   border-color: var(--primary);
 }
 
+.workload-stats-row {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.wl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.wl-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.wl-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.emp-recommendation {
+  display: flex;
+  gap: 0.6rem;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+.emp-recommendation p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #e0e7ff;
+}
+
+.rec-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* ── Phase 6: Employee History Panel ────────────────── */
+.emp-history-panel {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.hist-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.hist-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.hist-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hist-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.hist-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.hist-project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hist-project-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+.hist-proj-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.hist-progress-mini {
+  flex: 1;
+  min-width: 60px;
+  max-width: 80px;
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.hist-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #10b981);
+  border-radius: 99px;
+}
+
+.hist-prog-pct {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Task history */
+.hist-task-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hist-task-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.hist-task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(0,0,0,0.15);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+
+.hist-task-title {
+  font-size: 0.8rem;
+  flex: 1;
+  min-width: 100px;
+}
+
+.hist-task-proj {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.hist-task-priority {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.hist-task-due {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Status badges */
+.hist-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hist-badge.done, .hist-badge.completed { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+.hist-badge.inprog, .hist-badge.in_progress, .hist-badge.active { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+.hist-badge.overdue { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+.hist-badge.todo, .hist-badge.open, .hist-badge.planning { background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border-glass); }
+.hist-badge.on_hold { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+
+/* Inline employee history (manager view inside card) */
+.emp-history-inline {
+  background: rgba(10,12,22,0.5);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hist-mini-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.hist-mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.hist-mini-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+

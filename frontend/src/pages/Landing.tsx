@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Activity, ShieldCheck, Zap, BrainCircuit, ArrowRight, BarChart3, Users,
-  TrendingUp, FileText, AlertTriangle, CheckCircle2, ChevronDown
+  Activity, BrainCircuit, ArrowRight, BarChart3, Users,
+  FileText, AlertTriangle, CheckCircle2, ChevronDown
 } from 'lucide-react';
 import './Landing.css';
 

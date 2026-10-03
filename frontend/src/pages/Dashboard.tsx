@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Activity, Briefcase, Users, CheckSquare, AlertCircle, TrendingUp, BarChart2, Shield, Clock } from 'lucide-react';
+import { Briefcase, Users, CheckSquare, AlertCircle, TrendingUp, BarChart2, Shield, Clock } from 'lucide-react';
 import api from '../services/api';
 import './Dashboard.css';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from 'recharts';
-
-const RISK_COLORS = { HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981', UNKNOWN: '#6b7280' };
 
 const Dashboard: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);

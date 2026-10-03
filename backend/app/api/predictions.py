@@ -90,16 +90,20 @@ async def _gather_project_features(project_id: str, db) -> dict:
 
 
 @router.post("/project/{project_id}")
+@router.post("/analyze/project/{project_id}")
 async def predict_project_risk(
     project_id: str,
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Run full project intelligence pipeline: risk, delay, budget, health."""
+    """Run full project intelligence pipeline: risk, delay, budget, health, recommendations & notifications."""
     from ml.inference.project_risk import predict_project_risk_inference
     from ml.inference.deadline_delay import predict_deadline_delay
     from ml.inference.budget_overrun import predict_budget_overrun
     from ml.inference.project_health import calculate_project_health
+    from app.services.notification_service import notify_project_stakeholders
+    from app.services.recommendation_service import generate_project_recommendations
+    from app.services.activity_service import create_activity
 
     gathered = await _gather_project_features(project_id, db)
     features = gathered["features"]
@@ -141,22 +145,53 @@ async def predict_project_risk(
         upsert=True,
     )
 
-    # Generate notifications for high risk
+    # Automatically generate / refresh actionable explainable recommendations
+    try:
+        await generate_project_recommendations(project_id, db)
+    except Exception as e:
+        print(f"Warning: recommendation generation failed: {e}")
+
+    # Generate authoritative database notifications for high risk
     if risk_result["risk_class"] == "HIGH":
-        await db.notifications.insert_one({
-            "type": "high_risk_project",
-            "title": f"High Risk Alert: {project.get('name')}",
-            "message": f"Project {project.get('name')} has been flagged as HIGH RISK ({risk_result['risk_probability']:.0%} probability).",
-            "project_id": project_id,
-            "severity": "critical",
-            "read": False,
-            "created_at": datetime.utcnow(),
-        })
+        await notify_project_stakeholders(
+            db=db,
+            project_id=project_id,
+            notification_type="high_risk_project",
+            title=f"High Risk Alert: {project.get('name')}",
+            message=f"Project {project.get('name')} has been flagged as HIGH RISK ({risk_result['risk_probability']:.0%} probability). Delay: {delay_result['delay_days']} days.",
+            severity="critical",
+        )
+    elif budget_result["overrun_risk"] == "HIGH":
+        await notify_project_stakeholders(
+            db=db,
+            project_id=project_id,
+            notification_type="budget_overrun_risk",
+            title=f"Budget Risk Alert: {project.get('name')}",
+            message=f"Project {project.get('name')} has high forecasted budget overrun of ${budget_result['overrun_amount']:,.2f}.",
+            severity="high",
+        )
+
+    # Record activity in timeline
+    try:
+        actor_name = current_user.get("name") if current_user else "System"
+        actor_id = str(current_user["_id"]) if current_user else "system"
+        await create_activity(
+            db=db,
+            project_id=project_id,
+            activity_type="AI_ANALYSIS_COMPLETED",
+            message=f"AI Analysis completed for '{project.get('name')}': Health Score {health_result['health_score']}/100 ({health_result['health_status']}), Risk {risk_result['risk_class']}",
+            actor_user_id=actor_id,
+            actor_name=actor_name,
+            related_entity_id=project_id,
+        )
+    except Exception:
+        pass
 
     return prediction_doc
 
 
 @router.get("/project/{project_id}/latest")
+@router.get("/projects/{project_id}/latest")
 async def get_project_prediction(
     project_id: str,
     current_user=Depends(get_current_user),

@@ -1,7 +1,11 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import connect_db, close_db
-from app.api import auth, users, projects, employees, tasks, sprints, issues, predictions, employee_risk, documents, recommendations, resource_optimization, dashboard, reports
+from app.api import auth, users, projects, employees, tasks, sprints, issues, predictions, employee_risk, documents, recommendations, resource_optimization, dashboard, reports, activities, analytics, ai_assistant
 
 app = FastAPI(
     title="NexusAI API",
@@ -50,6 +54,9 @@ app.include_router(recommendations.router, prefix="/recommendations", tags=["Rec
 app.include_router(resource_optimization.router, prefix="/resource-optimization", tags=["Resource Optimization"])
 app.include_router(reports.router, prefix="/reports", tags=["Reports"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+app.include_router(activities.router, prefix="/activities", tags=["Activities"])
+app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
+app.include_router(ai_assistant.router, prefix="/ai-assistant", tags=["AI Assistant"])
 
 
 @app.get("/")

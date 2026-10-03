@@ -13,63 +13,133 @@ async def get_dashboard_summary(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Return live dashboard metrics from MongoDB."""
+    """Return live dashboard metrics from MongoDB scoped to current user."""
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    # Scoped projects matching authoritative scoping logic
+    from app.services.project_scoping_service import get_authorized_projects, get_authorized_employee_ids
+    projects = await get_authorized_projects(db, current_user)
+    project_ids = [str(p["_id"]) for p in projects]
+
     # Project counts
-    total_projects = await db.projects.count_documents({})
-    active_projects = await db.projects.count_documents({"status": "active"})
-    completed_projects = await db.projects.count_documents({"status": "completed"})
-    on_hold = await db.projects.count_documents({"status": "on_hold"})
+    total_projects = len(projects)
+    active_projects = sum(1 for p in projects if p.get("status") == "active")
+    completed_projects = sum(1 for p in projects if p.get("status") == "completed")
+    on_hold = sum(1 for p in projects if p.get("status") == "on_hold")
 
     # Risk overview from latest predictions
-    predictions = await db.project_predictions.find({}).to_list(200)
-    high_risk = sum(1 for p in predictions if p.get("risk_class") == "HIGH")
-    medium_risk = sum(1 for p in predictions if p.get("risk_class") == "MEDIUM")
-    low_risk = sum(1 for p in predictions if p.get("risk_class") == "LOW")
+    valid_obj_ids = [ObjectId(x) for x in project_ids if ObjectId.is_valid(x)]
+    pred_query = {
+        "$or": [
+            {"project_id": {"$in": project_ids}},
+            {"project_id": {"$in": valid_obj_ids}},
+        ]
+    } if project_ids else {"_id": None}
+    predictions = await db.project_predictions.find(pred_query).to_list(500)
+    high_risk = sum(1 for p in predictions if p.get("risk_class") == "HIGH" or p.get("risk_level") == "HIGH")
+    medium_risk = sum(1 for p in predictions if p.get("risk_class") == "MEDIUM" or p.get("risk_level") == "MEDIUM")
+    low_risk = sum(1 for p in predictions if p.get("risk_class") == "LOW" or p.get("risk_level") == "LOW")
 
     # Employee stats
-    total_employees = await db.employees.count_documents({"status": "active"})
-    burnout_preds = await db.employee_risk_predictions.find({}).to_list(200)
-    high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
-    medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
+    if role in ("admin", "project_manager"):
+        total_employees = await db.employees.count_documents({"status": "active"})
+        burnout_preds = await db.employee_risk_predictions.find({}).to_list(200)
+        high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
+        medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
+    else:
+        emp_ids = await get_authorized_employee_ids(db, current_user)
+        total_employees = len(emp_ids)
+        if emp_ids:
+            burnout_preds = await db.employee_risk_predictions.find({"employee_id": {"$in": emp_ids}}).to_list(200)
+            high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
+            medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
+        else:
+            high_burnout = 0
+            medium_burnout = 0
 
     # Issue stats
-    open_issues = await db.issues.count_documents({"status": "open"})
-    critical_issues = await db.issues.count_documents({"severity": "critical", "status": "open"})
+    if role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        possible_ids = [uid] + ([str(emp["_id"])] if emp else [])
+        open_issues = await db.issues.count_documents({"assignee_id": {"$in": possible_ids}, "status": "open"})
+        critical_issues = await db.issues.count_documents({"assignee_id": {"$in": possible_ids}, "severity": "critical", "status": "open"})
+    elif project_ids or role == "admin":
+        issue_query = {"project_id": {"$in": project_ids}} if project_ids else {}
+        open_issues = await db.issues.count_documents({**issue_query, "status": "open"})
+        critical_issues = await db.issues.count_documents({**issue_query, "severity": "critical", "status": "open"})
+    else:
+        open_issues = 0
+        critical_issues = 0
 
-    # Budget at-risk projects
-    all_projects = await db.projects.find({"status": "active"}).to_list(200)
+    # Budget at-risk projects (only for Admin/PM, not exposed to Team Members)
     budget_risk_count = 0
     total_budget = 0
     total_expenditure = 0
-    for p in all_projects:
-        budget = p.get("budget", 0)
-        expenditure = p.get("current_expenditure", 0)
-        total_budget += budget
-        total_expenditure += expenditure
-        if budget > 0 and expenditure / budget > 0.85:
-            budget_risk_count += 1
+    if role in ("admin", "project_manager"):
+        active_projects_list = [p for p in projects if p.get("status") == "active"]
+        for p in active_projects_list:
+            b = p.get("budget", 0)
+            e = p.get("current_expenditure", 0)
+            total_budget += b
+            total_expenditure += e
+            if b > 0 and e / b > 0.85:
+                budget_risk_count += 1
 
     # Task stats
-    total_tasks = await db.tasks.count_documents({})
-    overdue_tasks = await db.tasks.count_documents({
-        "status": {"$nin": ["done"]},
-        "due_date": {"$lt": datetime.utcnow().strftime("%Y-%m-%d")}
-    })
+    if role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        possible_ids = [uid] + ([str(emp["_id"])] if emp else [])
+        total_tasks = await db.tasks.count_documents({"assignee_id": {"$in": possible_ids}})
+        overdue_tasks = await db.tasks.count_documents({
+            "assignee_id": {"$in": possible_ids},
+            "status": {"$nin": ["done"]},
+            "due_date": {"$lt": today}
+        })
+    elif project_ids or role == "admin":
+        task_query = {"project_id": {"$in": project_ids}} if project_ids else {}
+        total_tasks = await db.tasks.count_documents(task_query)
+        overdue_tasks = await db.tasks.count_documents({
+            **task_query,
+            "status": {"$nin": ["done"]},
+            "due_date": {"$lt": today}
+        })
+    else:
+        total_tasks = 0
+        overdue_tasks = 0
 
-    # Recent recommendations
-    recent_recs = await db.recommendations.find({}).sort("created_at", -1).to_list(5)
+    # Recent recommendations (scoped)
+    rec_query = {"project_id": {"$in": project_ids}} if project_ids else ({} if role == "admin" else {"_id": None})
+    recent_recs = await db.recommendations.find(rec_query).sort("created_at", -1).to_list(5)
     for r in recent_recs:
         r["id"] = str(r["_id"])
         del r["_id"]
 
-    # Recent issues
-    recent_issues = await db.issues.find({"status": "open"}).sort("created_at", -1).to_list(5)
+    # Recent issues (scoped)
+    if role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        possible_ids = [uid] + ([str(emp["_id"])] if emp else [])
+        recent_issues = await db.issues.find({"assignee_id": {"$in": possible_ids}, "status": "open"}).sort("created_at", -1).to_list(5)
+    elif project_ids or role == "admin":
+        issue_query = {"project_id": {"$in": project_ids}} if project_ids else {}
+        recent_issues = await db.issues.find({**issue_query, "status": "open"}).sort("created_at", -1).to_list(5)
+    else:
+        recent_issues = []
     for i in recent_issues:
         i["id"] = str(i["_id"])
         del i["_id"]
 
-    # Notifications
-    unread_notifications = await db.notifications.count_documents({"read": False})
+    # Notifications (scoped to user_id or linked emp_id)
+    emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+    emp_id = str(emp["_id"]) if emp else None
+    notif_uids = [uid] + ([emp_id] if emp_id else [])
+    unread_notifications = await db.notifications.count_documents({
+        "$and": [
+            {"$or": [{"userId": {"$in": notif_uids}}, {"user_id": {"$in": notif_uids}}]},
+            {"$or": [{"isRead": False}, {"read": False}]}
+        ]
+    })
 
     return {
         "projects": {
@@ -140,7 +210,11 @@ async def get_notifications(
     db=Depends(get_database),
 ):
     user_id = str(current_user["_id"])
-    query = {"$or": [{"userId": user_id}, {"user_id": user_id}]}
+    emp = await db.employees.find_one({"$or": [{"user_id": user_id}, {"email": current_user.get("email")}]})
+    emp_id = str(emp["_id"]) if emp else None
+    id_list = [user_id] + ([emp_id] if emp_id else [])
+
+    query = {"$or": [{"userId": {"$in": id_list}}, {"user_id": {"$in": id_list}}]}
     if unread_only:
         query["$and"] = [{"$or": [{"isRead": False}, {"read": False}]}]
     notifications = await db.notifications.find(query).sort("createdAt", -1).to_list(100)
@@ -153,7 +227,7 @@ async def get_notifications(
             "message": n.get("message"),
             "related_project_id": str(n.get("relatedProjectId") or n.get("related_project_id", "") or ""),
             "severity": n.get("severity", "medium"),
-            "is_read": n.get("isRead") or n.get("read") or False,
+            "is_read": n.get("isRead") if "isRead" in n else (n.get("read") if "read" in n else False),
             "created_at": n.get("createdAt") or n.get("created_at"),
         })
     return result
@@ -165,9 +239,15 @@ async def get_unread_count(
     db=Depends(get_database),
 ):
     user_id = str(current_user["_id"])
+    emp = await db.employees.find_one({"$or": [{"user_id": user_id}, {"email": current_user.get("email")}]})
+    emp_id = str(emp["_id"]) if emp else None
+    id_list = [user_id] + ([emp_id] if emp_id else [])
+
     count = await db.notifications.count_documents({
-        "$or": [{"userId": user_id}, {"user_id": user_id}],
-        "$or": [{"isRead": False}, {"read": False}],
+        "$and": [
+            {"$or": [{"userId": {"$in": id_list}}, {"user_id": {"$in": id_list}}]},
+            {"$or": [{"isRead": False}, {"read": False}]}
+        ]
     })
     return {"unread_count": count}
 
@@ -194,8 +274,12 @@ async def mark_all_read(
     db=Depends(get_database),
 ):
     user_id = str(current_user["_id"])
+    emp = await db.employees.find_one({"$or": [{"user_id": user_id}, {"email": current_user.get("email")}]})
+    emp_id = str(emp["_id"]) if emp else None
+    id_list = [user_id] + ([emp_id] if emp_id else [])
+
     await db.notifications.update_many(
-        {"$or": [{"userId": user_id}, {"user_id": user_id}]},
+        {"$or": [{"userId": {"$in": id_list}}, {"user_id": {"$in": id_list}}]},
         {"$set": {"isRead": True, "read": True}}
     )
     return {"message": "All notifications marked as read"}

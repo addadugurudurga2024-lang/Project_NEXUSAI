@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
   LayoutDashboard,
@@ -13,6 +13,8 @@ import {
   Network,
   Bell,
   BarChart3,
+  TrendingUp,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -20,7 +22,6 @@ import './Sidebar.css';
 
 const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Poll unread notifications count
@@ -91,6 +92,16 @@ const Sidebar: React.FC = () => {
             <span>Reports</span>
           </NavLink>
         )}
+        {isManager && (
+          <NavLink to="/dashboard/analytics" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <TrendingUp size={20} />
+            <span>Analytics</span>
+          </NavLink>
+        )}
+        <NavLink to="/dashboard/ai-assistant" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Bot size={20} />
+          <span>AI Assistant</span>
+        </NavLink>
 
         <p className="nav-label mt-4">SYSTEM</p>
         <NavLink to="/dashboard/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

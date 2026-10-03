@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Bell, BellOff, CheckCheck, AlertTriangle, Info, Zap,
-  AlertCircle, TrendingUp, FileText, Users, RefreshCw
+  TrendingUp, FileText, Users, RefreshCw
 } from 'lucide-react';
 import api from '../services/api';
 import './Notifications.css';

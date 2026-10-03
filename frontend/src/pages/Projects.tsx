@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Activity, ShieldAlert, AlertTriangle, Plus, Edit2, Trash2,
-  X, AlertCircle, Briefcase, DollarSign, Calendar, Users
+  X, AlertCircle, Briefcase, DollarSign, Calendar, Users, Clock, ChevronDown, ChevronUp
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -62,6 +62,11 @@ const Projects: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [deleteId,  setDeleteId]  = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
+  // Phase 6: per-project activity panel state
+  const [activityOpen, setActivityOpen] = useState<string | null>(null);
+  const [activities, setActivities] = useState<Record<string, any[]>>({});
+  const [activityLoading, setActivityLoading] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
   /* ── Fetch ─────────────────────────────────────────── */
   const fetchAll = useCallback(async () => {
@@ -207,12 +212,41 @@ const Projects: React.FC = () => {
 
   /* ── AI Analysis ───────────────────────────────────── */
   const runAnalysis = async (projectId: string) => {
+    setAnalyzingId(projectId);
     try {
       await api.post(`/predictions/analyze/project/${projectId}`);
-      fetchAll();
+      await fetchAll();
     } catch (err) {
       console.error('Analysis failed', err);
+    } finally {
+      setAnalyzingId(null);
     }
+  };
+
+  // Phase 6: toggle activity panel and fetch on first open
+  const toggleActivity = async (projectId: string) => {
+    if (activityOpen === projectId) {
+      setActivityOpen(null);
+      return;
+    }
+    setActivityOpen(projectId);
+    if (!activities[projectId]) {
+      setActivityLoading(projectId);
+      try {
+        const res = await api.get(`/activities/project/${projectId}`);
+        setActivities(prev => ({ ...prev, [projectId]: res.data }));
+      } catch {
+        setActivities(prev => ({ ...prev, [projectId]: [] }));
+      } finally {
+        setActivityLoading(null);
+      }
+    }
+  };
+
+  const ACTIVITY_ICONS: Record<string, string> = {
+    PROJECT_CREATED: '🚀', PM_ASSIGNED: '👤', MEMBER_ADDED: '➕', MEMBER_REMOVED: '➖',
+    TASK_CREATED: '📋', TASK_ASSIGNED: '🎯', TASK_REASSIGNED: '🔄', TASK_STATUS_CHANGED: '✅',
+    ISSUE_CREATED: '🐛', ISSUE_ASSIGNED: '🔧', ISSUE_RESOLVED: '✔️', ISSUE_STATUS_CHANGED: '📝',
   };
 
   /* ── Filtered list ─────────────────────────────────── */
@@ -379,8 +413,14 @@ const Projects: React.FC = () => {
               </div>
             ) : (
               <div className="ai-insights empty">
-                <button className="analyze-button" onClick={() => runAnalysis(project.id)} id={`analyze-${project.id}`}>
-                  <Activity size={14}/> Run AI Analysis
+                <button
+                  className="analyze-button"
+                  disabled={analyzingId === project.id}
+                  onClick={() => runAnalysis(project.id)}
+                  id={`analyze-${project.id}`}
+                >
+                  <Activity size={14} className={analyzingId === project.id ? "spin" : ""} />
+                  {analyzingId === project.id ? "Analyzing..." : "Run AI Analysis"}
                 </button>
               </div>
             )}
@@ -407,7 +447,51 @@ const Projects: React.FC = () => {
                   </button>
                 </>
               )}
+              {/* Phase 6: Activity toggle button */}
+              <button
+                className="action-btn activity-btn"
+                onClick={() => toggleActivity(project.id)}
+                id={`activity-${project.id}`}
+                title="View project activity"
+              >
+                <Clock size={14}/>
+                {activityOpen === project.id ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
+                Activity
+              </button>
             </div>
+
+            {/* Phase 6: Activity Timeline Panel */}
+            {activityOpen === project.id && (
+              <div className="project-activity-panel">
+                <div className="activity-panel-header">
+                  <Clock size={14}/>
+                  <span>Project Activity</span>
+                </div>
+                {activityLoading === project.id ? (
+                  <div className="activity-loading">Loading activity...</div>
+                ) : (activities[project.id] || []).length === 0 ? (
+                  <div className="activity-empty">No activity recorded yet.</div>
+                ) : (
+                  <ul className="activity-list">
+                    {(activities[project.id] || []).map((act: any) => (
+                      <li key={act.id} className="activity-item">
+                        <span className="activity-icon">
+                          {ACTIVITY_ICONS[act.activity_type] || '•'}
+                        </span>
+                        <div className="activity-body">
+                          <span className="activity-message">{act.message}</span>
+                          <span className="activity-meta">
+                            {act.timestamp
+                              ? new Date(act.timestamp).toLocaleString()
+                              : ''}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

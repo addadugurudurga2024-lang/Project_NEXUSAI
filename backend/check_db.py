@@ -1,4 +1,5 @@
 import asyncio
+# pyrefly: ignore [missing-import]
 from motor.motor_asyncio import AsyncIOMotorClient
 
 async def main():

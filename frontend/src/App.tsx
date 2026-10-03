@@ -15,6 +15,8 @@ import Recommendations from './pages/Recommendations';
 import ResourceOptimization from './pages/ResourceOptimization';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
+import Analytics from './pages/Analytics';
+import AIAssistant from './pages/AIAssistant';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -65,7 +67,9 @@ function App() {
             <Route path="recommendations" element={<Recommendations />} />
             <Route path="resource-optimization" element={<ManagerRoute><ResourceOptimization /></ManagerRoute>} />
             <Route path="notifications" element={<Notifications />} />
-            <Route path="reports" element={<Reports />} />
+            <Route path="reports" element={<ManagerRoute><Reports /></ManagerRoute>} />
+            <Route path="analytics" element={<ManagerRoute><Analytics /></ManagerRoute>} />
+            <Route path="ai-assistant" element={<AIAssistant />} />
           </Route>
 
           {/* Catch-all */}

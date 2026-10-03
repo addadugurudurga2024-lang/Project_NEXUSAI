@@ -43,8 +43,9 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
     project_name = project.get("name", "Project")
 
     # 1. Fetch active tasks for this project
+    valid_pid_objs = [ObjectId(project_id)] if ObjectId.is_valid(project_id) else []
     tasks = await db.tasks.find({
-        "project_id": project_id,
+        "project_id": {"$in": [project_id] + valid_pid_objs},
         "status": {"$nin": ["done"]},
     }).to_list(500)
 
@@ -57,7 +58,11 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
         emp_id = str(emp["_id"])
         # Find all active tasks assigned across all projects to measure total real load
         all_emp_tasks = await db.tasks.find({
-            "assignee_id": emp_id,
+            "$or": [
+                {"assignee_id": emp_id},
+                {"assignee_id": ObjectId(emp_id) if ObjectId.is_valid(emp_id) else emp_id},
+                {"assigned_to": emp_id},
+            ],
             "status": {"$nin": ["done"]},
         }).to_list(500)
 
@@ -74,6 +79,7 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
             "employee_id": emp_id,
             "id": emp_id,
             "name": emp.get("name", "Employee"),
+            "email": emp.get("email", ""),
             "role": emp.get("role", "Engineer"),
             "specialization": emp.get("specialization", "General"),
             "skills": emp.get("skills", []),
@@ -90,9 +96,9 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
                     "title": t.get("title", "Task"),
                     "estimated_hours": float(t.get("estimated_hours", 0) or 0),
                     "priority": t.get("priority", "medium"),
-                    "project_id": t.get("project_id"),
+                    "project_id": str(t.get("project_id")),
                 }
-                for t in all_emp_tasks if t.get("project_id") == project_id
+                for t in all_emp_tasks if str(t.get("project_id")) in (project_id, str(valid_pid_objs[0]) if valid_pid_objs else "")
             ]
         }
 
@@ -111,12 +117,15 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
         # Get assignable tasks belonging to this project for the overloaded employee
         assignable_tasks = [
             t for t in tasks
-            if t.get("assignee_id") == over_emp["employee_id"]
+            if (str(t.get("assignee_id", "")) == over_emp["employee_id"] or str(t.get("assigned_to", "")) == over_emp["employee_id"])
             and t.get("priority") not in ["critical"]  # Avoid moving critical path unless essential
         ]
         if not assignable_tasks:
-            # Fallback to any active non-done task
-            assignable_tasks = [t for t in tasks if t.get("assignee_id") == over_emp["employee_id"]]
+            # Fallback to any active non-done task in this project
+            assignable_tasks = [
+                t for t in tasks
+                if str(t.get("assignee_id", "")) == over_emp["employee_id"] or str(t.get("assigned_to", "")) == over_emp["employee_id"]
+            ]
 
         # Sort tasks by estimated hours descending (aim for impactful rebalance)
         assignable_tasks.sort(key=lambda t: float(t.get("estimated_hours", 0) or 0), reverse=True)
@@ -281,7 +290,15 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
         "message": (
             f"Generated {len(reallocation_suggestions)} resource reallocation suggestion(s)."
             if reallocation_suggestions
-            else "No suitable resource reallocation identified based on current workload and skills."
+            else (
+                f"No eligible reallocation candidates found in '{project_name}' because: "
+                + (
+                    f"overloaded member(s) [{', '.join(o['name'] for o in overloaded)}] have no active tasks in this project. Reallocations can be reviewed in projects where they have assigned tasks."
+                    if not [t for t in tasks if any(str(t.get("assignee_id", "")) == o["employee_id"] or str(t.get("assigned_to", "")) == o["employee_id"] for o in overloaded)]
+                    else "available team members lack sufficient remaining capacity or matching skills to absorb active tasks without exceeding the 95% capacity threshold."
+                )
+            ) if overloaded
+            else "All team members are operating within normal weekly capacity (<100% load)."
         ),
         "computed_at": datetime.utcnow().isoformat(),
     }
