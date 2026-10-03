@@ -20,14 +20,14 @@ def serialize_project(p: dict, manager_name: str = None) -> dict:
         "domain": p.get("domain"),
         "status": p.get("status", "planning"),
         "priority": p.get("priority", "medium"),
-        "start_date": p.get("start_date"),
-        "end_date": p.get("end_date"),
-        "budget": p.get("budget", 0.0),
-        "current_expenditure": p.get("current_expenditure", 0.0),
-        "progress": p.get("progress", 0.0),
-        "manager_id": p.get("manager_id"),
+        "start_date": str(p.get("start_date"))[:10] if p.get("start_date") is not None else None,
+        "end_date": str(p.get("end_date"))[:10] if p.get("end_date") is not None else None,
+        "budget": float(p.get("budget", 0.0)),
+        "current_expenditure": float(p.get("current_expenditure", 0.0)),
+        "progress": float(p.get("progress", 0.0)),
+        "manager_id": str(p["manager_id"]) if p.get("manager_id") else None,
         "manager_name": manager_name,
-        "team_member_ids": p.get("team_member_ids", []),
+        "team_member_ids": [str(x) for x in p.get("team_member_ids", p.get("team_ids", []))],
         "requirements": p.get("requirements"),
         "tech_stack": p.get("tech_stack", []),
         "created_at": p.get("created_at"),
@@ -52,27 +52,38 @@ async def list_projects(
 ):
     """
     RBAC:
-    - admin / project_manager → see all projects
+    - admin → see all projects
+    - project_manager → see only their managed projects
     - team_member → see only projects where their employee_id is in team_member_ids
     """
     role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
     query = {}
     if status:
         query["status"] = status
     if priority:
         query["priority"] = priority
 
-    if role == "team_member":
-        # Find the employee profile linked to this user
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+    if role == "admin":
+        pass
+    elif role == "project_manager":
+        valid_obj_ids = [ObjectId(uid)] if ObjectId.is_valid(uid) else []
+        query["$or"] = [
+            {"manager_id": uid},
+            {"manager_id": {"$in": valid_obj_ids}},
+            {"project_manager_id": uid},
+            {"created_by": uid},
+        ]
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if emp:
             emp_id = str(emp["_id"])
-            query["team_member_ids"] = emp_id
+            valid_emp_objs = [emp["_id"]] if isinstance(emp["_id"], ObjectId) else []
+            query["team_member_ids"] = {"$in": [uid, emp_id] + valid_emp_objs}
         else:
-            # No employee profile → return empty list
             return []
 
-    projects = await db.projects.find(query).sort("created_at", -1).to_list(200)
+    projects = await db.projects.find(query).sort("created_at", -1).to_list(500)
     result = []
     for p in projects:
         manager_name = await _get_manager_name(db, p["manager_id"]) if p.get("manager_id") else None
@@ -122,6 +133,7 @@ async def create_project(
         )
 
     # Record MEMBER_ADDED and send notifications for initial team members
+    from app.services.notification_service import notify_project_assigned
     for member_id in doc.get("team_member_ids", []):
         try:
             emp = await db.employees.find_one({"_id": ObjectId(member_id)})
@@ -135,24 +147,13 @@ async def create_project(
                 actor_name=actor_name,
                 related_entity_id=member_id,
             )
-            target_uid = emp.get("user_id") if emp else None
-            if not target_uid and emp and emp.get("email"):
-                u = await db.users.find_one({"email": emp["email"]})
-                if u:
-                    target_uid = str(u["_id"])
-            if not target_uid and emp:
-                target_uid = str(emp["_id"])
-            if target_uid:
-                from app.services.notification_service import create_notification
-                await create_notification(
-                    db=db,
-                    user_id=target_uid,
-                    notification_type="project_assignment",
-                    title="Added to Project",
-                    message=f"You have been added to project '{doc.get('name')}'.",
-                    related_project_id=project_id,
-                    severity="medium",
-                )
+            await notify_project_assigned(
+                db=db,
+                project_id=project_id,
+                project_name=doc.get("name", "Project"),
+                member_emp_id=member_id,
+                assigned_by_user=current_user,
+            )
         except Exception:
             pass
 
@@ -172,11 +173,18 @@ async def get_project(
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    # RBAC: team_member can only view their own projects
     role = current_user.get("role", "team_member")
-    if role == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
-        if not emp or str(emp["_id"]) not in p.get("team_member_ids", []):
+    uid = str(current_user["_id"])
+
+    if role == "project_manager":
+        mgr_id = str(p.get("manager_id") or p.get("project_manager_id") or p.get("created_by") or "")
+        if mgr_id != uid:
+            raise HTTPException(status_code=403, detail="Access denied: You do not manage this project")
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        emp_id = str(emp["_id"]) if emp else ""
+        team_ids = [str(x) for x in p.get("team_member_ids", [])]
+        if uid not in team_ids and emp_id not in team_ids:
             raise HTTPException(status_code=403, detail="Access denied")
 
     manager_name = await _get_manager_name(db, p["manager_id"]) if p.get("manager_id") else None
@@ -196,6 +204,13 @@ async def update_project(
         raise HTTPException(status_code=400, detail="Invalid project ID")
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    if role == "project_manager":
+        mgr_id = str(p.get("manager_id") or p.get("project_manager_id") or p.get("created_by") or "")
+        if mgr_id != uid:
+            raise HTTPException(status_code=403, detail="Access denied: You cannot update another PM's project")
 
     old_manager_id = p.get("manager_id")
     old_team_ids = set(p.get("team_member_ids", []))
@@ -240,25 +255,13 @@ async def update_project(
                 actor_name=actor_name,
                 related_entity_id=member_id,
             )
-            # Also notify the added member
-            target_uid = emp.get("user_id") if emp else None
-            if not target_uid and emp and emp.get("email"):
-                u = await db.users.find_one({"email": emp["email"]})
-                if u:
-                    target_uid = str(u["_id"])
-            if not target_uid and emp:
-                target_uid = str(emp["_id"])
-            if target_uid:
-                from app.services.notification_service import create_notification
-                await create_notification(
-                    db=db,
-                    user_id=target_uid,
-                    notification_type="project_assignment",
-                    title="Added to Project",
-                    message=f"You have been added to project '{project_name}'.",
-                    related_project_id=project_id,
-                    severity="medium",
-                )
+            await notify_project_assigned(
+                db=db,
+                project_id=project_id,
+                project_name=project_name,
+                member_emp_id=member_id,
+                assigned_by_user=current_user,
+            )
         except Exception:
             pass
 
@@ -289,9 +292,20 @@ async def delete_project(
     db=Depends(get_database),
 ):
     try:
-        result = await db.projects.delete_one({"_id": ObjectId(project_id)})
+        p = await db.projects.find_one({"_id": ObjectId(project_id)})
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid project ID")
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    if role == "project_manager":
+        mgr_id = str(p.get("manager_id") or p.get("project_manager_id") or p.get("created_by") or "")
+        if mgr_id != uid:
+            raise HTTPException(status_code=403, detail="Access denied: You cannot delete another PM's project")
+
+    result = await db.projects.delete_one({"_id": ObjectId(project_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"message": "Project deleted successfully"}

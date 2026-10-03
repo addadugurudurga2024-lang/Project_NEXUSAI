@@ -1,0 +1,465 @@
+{
+  "observation_id": {
+    "nunique": 50000,
+    "values": {
+      "OBS019472": 1,
+      "OBS037816": 1,
+      "OBS025299": 1,
+      "OBS025441": 1,
+      "OBS027976": 1,
+      "OBS028887": 1,
+      "OBS029315": 1,
+      "OBS029717": 1,
+      "OBS030113": 1,
+      "OBS030940": 1
+    }
+  },
+  "snapshot_date": {
+    "nunique": 698,
+    "values": {
+      "2025-07-09": 119,
+      "2024-11-17": 117,
+      "2024-11-30": 116,
+      "2025-01-21": 116,
+      "2024-05-01": 116,
+      "2024-05-11": 116,
+      "2024-12-02": 113,
+      "2024-12-28": 113,
+      "2025-06-14": 113,
+      "2024-07-09": 112
+    }
+  },
+  "split": {
+    "nunique": 2,
+    "values": {
+      "train": 40000,
+      "test": 10000
+    }
+  },
+  "assigned_to": {
+    "nunique": 5000,
+    "values": {
+      "E00518": 24,
+      "E02801": 21,
+      "E03694": 21,
+      "E01397": 21,
+      "E04072": 20,
+      "E02455": 20,
+      "E01165": 20,
+      "E00342": 20,
+      "E01481": 20,
+      "E04185": 20
+    }
+  },
+  "burnout_risk_reference": {
+    "nunique": 3,
+    "values": {
+      "low": 22432,
+      "medium": 15037,
+      "high": 12531
+    }
+  },
+  "completed_date": {
+    "nunique": 647,
+    "values": {
+      "NOT_COMPLETED": 47488,
+      "2024-11-06": 11,
+      "2025-04-27": 11,
+      "2024-12-27": 10,
+      "2024-04-26": 10,
+      "2024-04-08": 9,
+      "2024-08-01": 9,
+      "2025-03-22": 9,
+      "2024-12-03": 9,
+      "2025-07-15": 9
+    }
+  },
+  "created_at": {
+    "nunique": 629,
+    "values": {
+      "2024-03-09": 131,
+      "2024-03-25": 126,
+      "2024-03-12": 124,
+      "2024-03-19": 123,
+      "2024-03-26": 120,
+      "2024-03-24": 120,
+      "2025-07-09": 120,
+      "2024-03-08": 117,
+      "2024-12-24": 116,
+      "2024-03-17": 115
+    }
+  },
+  "created_date": {
+    "nunique": 629,
+    "values": {
+      "2024-03-09": 131,
+      "2024-03-25": 126,
+      "2024-03-12": 124,
+      "2024-03-19": 123,
+      "2024-03-26": 120,
+      "2024-03-24": 120,
+      "2025-07-09": 120,
+      "2024-03-08": 117,
+      "2024-12-24": 116,
+      "2024-03-17": 115
+    }
+  },
+  "description": {
+    "nunique": 1000,
+    "values": {
+      "Synthetic NexusAI snapshot for Cybersecurity Initiative 0472 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for DevOps Transformation Initiative 0609 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Cybersecurity Initiative 0956 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Software Development Initiative 0341 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Healthcare IT Initiative 0622 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Cybersecurity Initiative 0087 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Software Development Initiative 0880 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Cybersecurity Initiative 0527 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for Cloud Modernization Initiative 0111 supporting project delivery, resource, risk and financial intelligence.": 50,
+      "Synthetic NexusAI snapshot for DevOps Transformation Initiative 0873 supporting project delivery, resource, risk and financial intelligence.": 50
+    }
+  },
+  "due_date": {
+    "nunique": 760,
+    "values": {
+      "2025-03-31": 115,
+      "2024-07-16": 111,
+      "2024-12-17": 109,
+      "2025-08-05": 108,
+      "2025-06-05": 105,
+      "2025-09-02": 105,
+      "2025-05-07": 104,
+      "2025-02-08": 103,
+      "2024-08-29": 103,
+      "2025-06-29": 103
+    }
+  },
+  "employee_id": {
+    "nunique": 5000,
+    "values": {
+      "E00518": 24,
+      "E02801": 21,
+      "E03694": 21,
+      "E01397": 21,
+      "E04072": 20,
+      "E02455": 20,
+      "E01165": 20,
+      "E00342": 20,
+      "E01481": 20,
+      "E04185": 20
+    }
+  },
+  "employee_name": {
+    "nunique": 260,
+    "values": {
+      "Karan Rao 6": 240,
+      "Sanjay Rodriguez 7": 229,
+      "Emma Rao 10": 228,
+      "David Mehta": 227,
+      "Ananya Rodriguez 6": 227,
+      "Maria Sharma 8": 227,
+      "Alex Rodriguez 4": 226,
+      "Rohan Sharma": 226,
+      "David Mehta 11": 225,
+      "Rahul Sharma": 224
+    }
+  },
+  "end_date": {
+    "nunique": 568,
+    "values": {
+      "2025-06-08": 300,
+      "2025-07-27": 300,
+      "2025-11-30": 300,
+      "2025-12-25": 250,
+      "2026-03-14": 250,
+      "2025-12-29": 250,
+      "2025-05-16": 250,
+      "2025-05-20": 250,
+      "2025-04-12": 250,
+      "2026-06-16": 250
+    }
+  },
+  "entity_type": {
+    "nunique": 1,
+    "values": {
+      "project_snapshot": 50000
+    }
+  },
+  "goal": {
+    "nunique": 1000,
+    "values": {
+      "Deliver measurable progress for Cybersecurity Initiative 0472 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for DevOps Transformation Initiative 0609 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Cybersecurity Initiative 0956 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Software Development Initiative 0341 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Healthcare IT Initiative 0622 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Cybersecurity Initiative 0087 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Software Development Initiative 0880 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Cybersecurity Initiative 0527 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for Cloud Modernization Initiative 0111 within schedule and budget constraints.": 50,
+      "Deliver measurable progress for DevOps Transformation Initiative 0873 within schedule and budget constraints.": 50
+    }
+  },
+  "issue_id": {
+    "nunique": 18543,
+    "values": {
+      "NO_ISSUE": 31458,
+      "I012311": 1,
+      "I004228": 1,
+      "I003577": 1,
+      "I003164": 1,
+      "I003072": 1,
+      "I002442": 1,
+      "I002325": 1,
+      "I002131": 1,
+      "I001324": 1
+    }
+  },
+  "job_role": {
+    "nunique": 1,
+    "values": {
+      "Backend Engineer": 50000
+    }
+  },
+  "priority": {
+    "nunique": 4,
+    "values": {
+      "medium": 26013,
+      "low": 14073,
+      "high": 7921,
+      "critical": 1993
+    }
+  },
+  "project_id": {
+    "nunique": 1000,
+    "values": {
+      "P0472": 50,
+      "P0609": 50,
+      "P0956": 50,
+      "P0341": 50,
+      "P0622": 50,
+      "P0087": 50,
+      "P0880": 50,
+      "P0527": 50,
+      "P0111": 50,
+      "P0873": 50
+    }
+  },
+  "project_name": {
+    "nunique": 1000,
+    "values": {
+      "Cybersecurity Initiative 0472": 50,
+      "DevOps Transformation Initiative 0609": 50,
+      "Cybersecurity Initiative 0956": 50,
+      "Software Development Initiative 0341": 50,
+      "Healthcare IT Initiative 0622": 50,
+      "Cybersecurity Initiative 0087": 50,
+      "Software Development Initiative 0880": 50,
+      "Cybersecurity Initiative 0527": 50,
+      "Cloud Modernization Initiative 0111": 50,
+      "DevOps Transformation Initiative 0873": 50
+    }
+  },
+  "project_type": {
+    "nunique": 11,
+    "values": {
+      "Cybersecurity": 4550,
+      "Data Platform": 4550,
+      "FinTech": 4550,
+      "Healthcare IT": 4550,
+      "AI/ML Platform": 4550,
+      "Cloud Modernization": 4550,
+      "E-Commerce": 4550,
+      "Mobile Application": 4550,
+      "Enterprise ERP": 4550,
+      "DevOps Transformation": 4550
+    }
+  },
+  "required_skills": {
+    "nunique": 7414,
+    "values": {
+      "PyTorch": 869,
+      "Kubernetes": 842,
+      "JavaScript": 842,
+      "Java": 838,
+      "Docker": 836,
+      "TensorFlow": 813,
+      "CI/CD": 807,
+      "PostgreSQL": 807,
+      "AWS": 804,
+      "Python": 801
+    }
+  },
+  "resolved_at": {
+    "nunique": 679,
+    "values": {
+      "NOT_RESOLVED": 44789,
+      "2025-07-15": 21,
+      "2024-06-15": 19,
+      "2025-01-13": 18,
+      "2025-08-26": 18,
+      "2025-07-30": 17,
+      "2025-04-02": 16,
+      "2024-08-08": 16,
+      "2025-03-17": 16,
+      "2025-02-01": 16
+    }
+  },
+  "risk_class_reference": {
+    "nunique": 3,
+    "values": {
+      "low": 22662,
+      "medium": 14944,
+      "high": 12394
+    }
+  },
+  "scenario": {
+    "nunique": 6,
+    "values": {
+      "budget_pressure": 8431,
+      "normal_delivery": 8361,
+      "stable_execution": 8346,
+      "tight_deadline": 8343,
+      "resource_shortage": 8334,
+      "dependency_heavy": 8185
+    }
+  },
+  "severity": {
+    "nunique": 4,
+    "values": {
+      "medium": 18239,
+      "high": 17669,
+      "low": 12496,
+      "critical": 1596
+    }
+  },
+  "skills": {
+    "nunique": 4017,
+    "values": {
+      "Python;TensorFlow": 102,
+      "TensorFlow;CI/CD": 84,
+      "JavaScript;Java": 82,
+      "CI/CD;SQL": 78,
+      "Kubernetes;Cybersecurity": 77,
+      "Spring Boot;TensorFlow": 76,
+      "Java;AWS": 76,
+      "Azure;Git": 76,
+      "TypeScript;PyTorch": 75,
+      "AWS;Docker": 74
+    }
+  },
+  "specialization": {
+    "nunique": 10,
+    "values": {
+      "Product": 5148,
+      "Frontend": 5058,
+      "Cloud": 5040,
+      "Database": 5015,
+      "QA": 5010,
+      "Backend": 5003,
+      "DevOps": 4972,
+      "Data Engineering": 4936,
+      "Cybersecurity": 4912,
+      "Machine Learning": 4906
+    }
+  },
+  "sprint_id": {
+    "nunique": 4000,
+    "values": {
+      "S03756": 23,
+      "S00509": 22,
+      "S00265": 22,
+      "S02433": 22,
+      "S02084": 22,
+      "S00087": 22,
+      "S02063": 22,
+      "S00564": 21,
+      "S03747": 21,
+      "S03370": 21
+    }
+  },
+  "sprint_name": {
+    "nunique": 4000,
+    "values": {
+      "Sprint 03756": 23,
+      "Sprint 00509": 22,
+      "Sprint 00265": 22,
+      "Sprint 02433": 22,
+      "Sprint 02084": 22,
+      "Sprint 00087": 22,
+      "Sprint 02063": 22,
+      "Sprint 00564": 21,
+      "Sprint 03747": 21,
+      "Sprint 03370": 21
+    }
+  },
+  "start_date": {
+    "nunique": 669,
+    "values": {
+      "2024-10-07": 190,
+      "2025-07-10": 190,
+      "2025-06-04": 173,
+      "2025-08-19": 170,
+      "2024-12-29": 167,
+      "2024-11-26": 164,
+      "2024-09-17": 157,
+      "2024-12-01": 156,
+      "2024-12-22": 153,
+      "2024-04-12": 153
+    }
+  },
+  "status": {
+    "nunique": 4,
+    "values": {
+      "active": 45109,
+      "completed": 2512,
+      "on_hold": 1294,
+      "planning": 1085
+    }
+  },
+  "task_id": {
+    "nunique": 50000,
+    "values": {
+      "T019472": 1,
+      "T037816": 1,
+      "T025299": 1,
+      "T025441": 1,
+      "T027976": 1,
+      "T028887": 1,
+      "T029315": 1,
+      "T029717": 1,
+      "T030113": 1,
+      "T030940": 1
+    }
+  },
+  "task_name": {
+    "nunique": 50000,
+    "values": {
+      "Testing Task 019472": 1,
+      "Refactoring Task 037816": 1,
+      "Analysis Task 025299": 1,
+      "Development Task 025441": 1,
+      "Refactoring Task 027976": 1,
+      "Feature Task 028887": 1,
+      "Deployment Task 029315": 1,
+      "Feature Task 029717": 1,
+      "Bug Fix Task 030113": 1,
+      "Design Task 030940": 1
+    }
+  },
+  "title": {
+    "nunique": 50000,
+    "values": {
+      "Testing Task 019472": 1,
+      "Refactoring Task 037816": 1,
+      "Analysis Task 025299": 1,
+      "Development Task 025441": 1,
+      "Refactoring Task 027976": 1,
+      "Feature Task 028887": 1,
+      "Deployment Task 029315": 1,
+      "Feature Task 029717": 1,
+      "Bug Fix Task 030113": 1,
+      "Design Task 030940": 1
+    }
+  }
+}

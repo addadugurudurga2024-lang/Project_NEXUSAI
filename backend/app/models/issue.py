@@ -76,7 +76,10 @@ class IssueResponse(BaseModel):
     status: str
     assignee_id: Optional[str] = None
     assignee_name: Optional[str] = None
+    assigned_by: Optional[str] = None
+    assigned_by_name: Optional[str] = None
     resolution: Optional[str] = None
     resolved_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+

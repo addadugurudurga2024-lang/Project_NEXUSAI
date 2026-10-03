@@ -86,12 +86,18 @@ async def get_scoped_context(user: dict, db, project_id_hint: Optional[str] = No
     # 5. Employees & Burnout (MANAGERS / ADMIN ONLY)
     employees = []
     burnout_preds = []
-    if role in ("admin", "project_manager"):
+    if role == "admin":
         employees = await db.employees.find({"status": "active"}).to_list(500)
         burnout_preds = await db.employee_risk_predictions.find({}).to_list(500)
+    elif role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, user, projects)
+        valid_objs = [ObjectId(x) for x in authorized_eids if ObjectId.is_valid(x)]
+        employees = await db.employees.find({"_id": {"$in": valid_objs}}).to_list(500)
+        burnout_preds = await db.employee_risk_predictions.find({"employee_id": {"$in": authorized_eids}}).to_list(500)
     else:
         # Team member can only see their own basic employee record, NOT burnout predictions
-        emp = await db.employees.find_one({"email": user.get("email")})
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": user.get("email")}]})
         if emp:
             employees = [emp]
 

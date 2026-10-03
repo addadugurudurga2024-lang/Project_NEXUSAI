@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Users,
+  UserCheck,
   CheckSquare,
   AlertCircle,
   FileText,
@@ -61,6 +62,10 @@ const Sidebar: React.FC = () => {
         <NavLink to="/dashboard/employees" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Users size={20} />
           <span>Employees</span>
+        </NavLink>
+        <NavLink to="/dashboard/team-capacity" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <UserCheck size={20} />
+          <span>Team Capacity</span>
         </NavLink>
         <NavLink to="/dashboard/tasks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <CheckSquare size={20} />

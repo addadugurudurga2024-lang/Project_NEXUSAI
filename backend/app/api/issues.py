@@ -16,14 +16,16 @@ def serialize_issue(i: dict, assignee_name: str = None) -> dict:
         "id": str(i["_id"]),
         "title": i.get("title", ""),
         "description": i.get("description"),
-        "project_id": i.get("project_id", ""),
-        "task_id": i.get("task_id"),
+        "project_id": str(i.get("project_id", "")),
+        "task_id": str(i["task_id"]) if i.get("task_id") else None,
         "category": i.get("category", "bug"),
         "severity": i.get("severity", "medium"),
         "priority": i.get("priority", "medium"),
         "status": i.get("status", "open"),
-        "assignee_id": i.get("assignee_id"),
+        "assignee_id": str(i["assignee_id"]) if i.get("assignee_id") else None,
         "assignee_name": assignee_name,
+        "assigned_by": str(i["assigned_by"]) if i.get("assigned_by") else None,
+        "assigned_by_name": i.get("assigned_by_name"),
         "resolution": i.get("resolution"),
         "resolved_at": i.get("resolved_at"),
         "created_at": i.get("created_at"),
@@ -57,26 +59,40 @@ async def list_issues(
 ):
     """
     RBAC:
-    - admin / project_manager → see all issues (or filtered)
+    - admin → see all issues (or filtered)
+    - project_manager → see issues in their managed projects
     - team_member → see only issues assigned to them
     """
     role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
     query = {}
-    if project_id:
-        query["project_id"] = project_id
     if status:
         query["status"] = status
     if severity:
         query["severity"] = severity
 
-    if role == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+    if role == "admin":
+        if project_id:
+            query["project_id"] = project_id
+    elif role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id:
+            if project_id not in authorized_pids:
+                return []
+            query["project_id"] = project_id
+        else:
+            query["project_id"] = {"$in": authorized_pids}
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if emp:
             query["assignee_id"] = str(emp["_id"])
+            if project_id:
+                query["project_id"] = project_id
         else:
             return []
 
-    issues = await db.issues.find(query).sort("created_at", -1).to_list(500)
+    issues = await db.issues.find(query).sort("created_at", -1).to_list(1000)
     result = []
     for i in issues:
         name = await _resolve_assignee_name(db, i["assignee_id"]) if i.get("assignee_id") else None
@@ -90,15 +106,17 @@ async def create_issue(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    actor_name = current_user.get("name", current_user.get("email", "Unknown"))
     doc = data.model_dump()
+    doc["assigned_by"] = str(current_user["_id"])
+    doc["assigned_by_name"] = actor_name
     doc["created_at"] = datetime.utcnow()
     doc["updated_at"] = datetime.utcnow()
     result = await db.issues.insert_one(doc)
     doc["_id"] = result.inserted_id
     issue_id = str(result.inserted_id)
-    actor_name = current_user.get("name", current_user.get("email", "Unknown"))
 
-    # Phase 6: ISSUE_CREATED activity
+    # Activity: ISSUE_CREATED
     if doc.get("project_id"):
         await create_activity(
             db=db,
@@ -110,7 +128,7 @@ async def create_issue(
             related_entity_id=issue_id,
         )
 
-        # Phase 6: ISSUE_ASSIGNED activity if assignee set at creation
+        # EVENT 2: ISSUE_ASSIGNED notification if assignee set at creation
         if doc.get("assignee_id"):
             try:
                 emp = await db.employees.find_one({"_id": ObjectId(doc["assignee_id"])})
@@ -124,24 +142,18 @@ async def create_issue(
                     actor_name=actor_name,
                     related_entity_id=issue_id,
                 )
-                target_uid = emp.get("user_id") if emp else None
-                if not target_uid and emp and emp.get("email"):
-                    u = await db.users.find_one({"email": emp["email"]})
-                    if u:
-                        target_uid = str(u["_id"])
-                if not target_uid and emp:
-                    target_uid = str(emp["_id"])
-                if target_uid:
-                    from app.services.notification_service import create_notification
-                    await create_notification(
-                        db=db,
-                        user_id=target_uid,
-                        notification_type="issue_assignment",
-                        title="New Issue Assigned",
-                        message=f"You have been assigned to issue '{doc.get('title')}'. Severity: {doc.get('severity', 'medium')}.",
-                        related_project_id=doc.get("project_id"),
-                        severity="high" if doc.get("severity") in ("critical", "high") else "medium",
-                    )
+                proj_name = await _resolve_project_name(db, doc.get("project_id", ""))
+                from app.services.notification_service import notify_issue_assigned
+                await notify_issue_assigned(
+                    db=db,
+                    project_id=doc.get("project_id", ""),
+                    project_name=proj_name,
+                    issue_id=issue_id,
+                    issue_title=doc.get("title", "Issue"),
+                    severity=doc.get("severity", "medium"),
+                    assignee_emp_id=doc["assignee_id"],
+                    assigned_by_user=current_user,
+                )
             except Exception:
                 pass
 
@@ -175,9 +187,17 @@ async def get_issue(
     if not i:
         raise HTTPException(status_code=404, detail="Issue not found")
 
-    # RBAC: team_member can only see issues assigned to them
-    if current_user.get("role") == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    project_id = str(i.get("project_id", ""))
+
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Issue belongs to another PM's project")
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if not emp or str(emp["_id"]) != i.get("assignee_id"):
             raise HTTPException(status_code=403, detail="Access denied")
 
@@ -200,12 +220,20 @@ async def update_issue(
         raise HTTPException(status_code=404, detail="Issue not found")
 
     role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
     old_assignee = i.get("assignee_id")
     old_status = i.get("status", "open")
+    project_id = str(i.get("project_id", ""))
+    actor_name = current_user.get("name", current_user.get("email", "Unknown"))
 
-    # RBAC: team_member can only update status/resolution on their own issues
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot update another PM's issue")
+
     if role == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if not emp or str(emp["_id"]) != old_assignee:
             raise HTTPException(status_code=403, detail="You can only update issues assigned to you")
         allowed_fields = {"status", "resolution"}
@@ -216,19 +244,28 @@ async def update_issue(
     else:
         update_data = {k: v for k, v in data.model_dump().items() if v is not None}
 
-    if update_data.get("status") == "resolved" and not i.get("resolved_at"):
+    # If assignee is updated, preserve the new assigner context
+    if "assignee_id" in update_data and update_data["assignee_id"] != old_assignee:
+        update_data["assigned_by"] = str(current_user["_id"])
+        update_data["assigned_by_name"] = actor_name
+
+    # Resolution timestamp tracking & reopening
+    if update_data.get("status") == "resolved" and old_status != "resolved":
         update_data["resolved_at"] = datetime.utcnow()
+    elif update_data.get("status") and update_data["status"] != "resolved" and old_status == "resolved":
+        update_data["resolved_at"] = None
+
     update_data["updated_at"] = datetime.utcnow()
     await db.issues.update_one({"_id": ObjectId(issue_id)}, {"$set": update_data})
     updated = await db.issues.find_one({"_id": ObjectId(issue_id)})
 
-    actor_name = current_user.get("name", current_user.get("email", "Unknown"))
-    project_id = updated.get("project_id", "")
     new_assignee = updated.get("assignee_id")
     new_status = updated.get("status", old_status)
 
     if project_id:
-        # Phase 6: ISSUE_ASSIGNED (reassignment)
+        proj_name = await _resolve_project_name(db, project_id)
+
+        # EVENT 2: ISSUE_ASSIGNED notification if assignee changed
         if new_assignee and new_assignee != old_assignee:
             try:
                 emp = await db.employees.find_one({"_id": ObjectId(new_assignee)})
@@ -242,28 +279,21 @@ async def update_issue(
                     actor_name=actor_name,
                     related_entity_id=issue_id,
                 )
-                target_uid = emp.get("user_id") if emp else None
-                if not target_uid and emp and emp.get("email"):
-                    u = await db.users.find_one({"email": emp["email"]})
-                    if u:
-                        target_uid = str(u["_id"])
-                if not target_uid and emp:
-                    target_uid = str(emp["_id"])
-                if target_uid:
-                    from app.services.notification_service import create_notification
-                    await create_notification(
-                        db=db,
-                        user_id=target_uid,
-                        notification_type="issue_assignment",
-                        title="Issue Reassigned",
-                        message=f"You have been assigned to issue '{updated.get('title')}'. Severity: {updated.get('severity', 'medium')}.",
-                        related_project_id=project_id,
-                        severity="high" if updated.get("severity") in ("critical", "high") else "medium",
-                    )
+                from app.services.notification_service import notify_issue_assigned
+                await notify_issue_assigned(
+                    db=db,
+                    project_id=project_id,
+                    project_name=proj_name,
+                    issue_id=issue_id,
+                    issue_title=updated.get("title", "Issue"),
+                    severity=updated.get("severity", "medium"),
+                    assignee_emp_id=new_assignee,
+                    assigned_by_user=current_user,
+                )
             except Exception:
                 pass
 
-        # Phase 6: ISSUE_RESOLVED or ISSUE_STATUS_CHANGED
+        # EVENT 3: ISSUE_RESOLVED notification if status transitioned to resolved
         if new_status != old_status:
             if new_status == "resolved":
                 await create_activity(
@@ -275,6 +305,21 @@ async def update_issue(
                     actor_name=actor_name,
                     related_entity_id=issue_id,
                 )
+                try:
+                    assigning_manager = updated.get("assigned_by") or updated.get("reporter_id") or i.get("assigned_by")
+                    from app.services.notification_service import notify_issue_resolved
+                    await notify_issue_resolved(
+                        db=db,
+                        project_id=project_id,
+                        project_name=proj_name,
+                        issue_id=issue_id,
+                        issue_title=updated.get("title", "Issue"),
+                        assignee_emp_id=updated.get("assignee_id"),
+                        assigning_manager_id=assigning_manager,
+                        resolved_by_user=current_user,
+                    )
+                except Exception:
+                    pass
             else:
                 await create_activity(
                     db=db,
@@ -296,10 +341,25 @@ async def delete_issue(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
+    if role == "team_member":
+        raise HTTPException(status_code=403, detail="Team members cannot delete issues")
+
     try:
-        result = await db.issues.delete_one({"_id": ObjectId(issue_id)})
+        i = await db.issues.find_one({"_id": ObjectId(issue_id)})
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid issue ID")
+    if not i:
+        raise HTTPException(status_code=404, detail="Issue not found")
+
+    project_id = str(i.get("project_id", ""))
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot delete another PM's issue")
+
+    result = await db.issues.delete_one({"_id": ObjectId(issue_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Issue not found")
     return {"message": "Issue deleted successfully"}

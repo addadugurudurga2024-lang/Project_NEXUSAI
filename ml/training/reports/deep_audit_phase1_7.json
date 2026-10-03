@@ -1,0 +1,178 @@
+{
+  "sha256_before": "7479ac243e7fc3403c6799bc8679c96f48292f00dc9743c7680c8de66a4c2cf5",
+  "dataset_structure": {
+    "total_rows": 50000,
+    "total_columns": 90,
+    "unique_projects": 1000,
+    "unique_employees": 5000,
+    "unique_tasks": 50000,
+    "unique_issues": 18543,
+    "unique_sprints": 4000,
+    "observations_per_project": {
+      "min": 50,
+      "max": 50,
+      "mean": 50.0
+    },
+    "observations_per_employee": {
+      "min": 1,
+      "max": 24,
+      "mean": 10.0
+    },
+    "date_range": {
+      "min": "2024-01-10",
+      "max": "2025-12-07"
+    }
+  },
+  "target_distributions": {
+    "project_risk": {
+      "type": "classification",
+      "counts": {
+        "low": 22662,
+        "medium": 14944,
+        "high": 12394
+      },
+      "percentages": {
+        "low": 45.32,
+        "medium": 29.89,
+        "high": 24.79
+      },
+      "majority_baseline_acc": 45.32,
+      "balanced_acc_baseline": 33.33
+    },
+    "burnout_risk": {
+      "type": "classification",
+      "counts": {
+        "low": 22432,
+        "medium": 15037,
+        "high": 12531
+      },
+      "percentages": {
+        "low": 44.86,
+        "medium": 30.07,
+        "high": 25.06
+      },
+      "majority_baseline_acc": 44.86,
+      "balanced_acc_baseline": 33.33
+    },
+    "deadline_delay": {
+      "type": "regression",
+      "mean": 14.96,
+      "std": 6.56,
+      "median": 14.64,
+      "min": 0.5,
+      "max": 58.57,
+      "p25": 10.39,
+      "p50": 14.64,
+      "p75": 19.2,
+      "p90": 23.54,
+      "p95": 26.05,
+      "p99": 31.45,
+      "skewness": 0.367,
+      "zero_target_pct": 0.0,
+      "positive_target_pct": 100.0
+    },
+    "budget_overrun": {
+      "type": "regression",
+      "mean": 10097.63,
+      "std": 23922.48,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 499647.25,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 8875.14,
+      "p90": 35190.21,
+      "p95": 55859.92,
+      "p99": 109346.04,
+      "skewness": 4.551,
+      "zero_target_pct": 68.09,
+      "positive_target_pct": 31.91,
+      "positive_only_mean": 31640.12,
+      "positive_only_median": 21972.43,
+      "positive_only_p90": 69612.47
+    }
+  },
+  "target_generation_findings": {
+    "project_risk": {
+      "risk_score_in_dataset": false,
+      "derivation_nature": "Binned multi-factor operational health indicator."
+    },
+    "burnout_risk": {
+      "depth3_tree_fit_acc": 0.8797,
+      "dominant_features": [
+        "workload_ratio",
+        "overtime_hours",
+        "assigned_hours"
+      ],
+      "derivation_nature": "Strongly deterministic thresholding based on workload_ratio (>100% cap) and chronic overtime hours."
+    },
+    "deadline_delay": {
+      "correlations": {
+        "progress_gap": 0.16,
+        "team_workload": 0.375,
+        "overdue_tasks": 0.304,
+        "critical_issues": 0.01,
+        "total_days": -0.084
+      },
+      "derivation_nature": "Continuous function driven primarily by progress_gap (schedule delay vs work done) and team workload compounder."
+    },
+    "budget_overrun": {
+      "correlations": {
+        "budget_utilization": 0.566,
+        "current_expenditure": 0.666,
+        "progress": -0.0,
+        "spending_rate_k": 0.233
+      },
+      "derivation_nature": "Two-phase structural target: 68% clamped exactly at 0 (on budget); positive overruns follow burn-rate acceleration over baseline budget."
+    }
+  },
+  "label_quality": {
+    "project_risk_mutual_info": {
+      "progress": 0.0,
+      "task_completion_rate": 0.0047,
+      "overdue_tasks": 0.0212,
+      "avg_sprint_velocity": 0.0021,
+      "total_bugs": 0.0,
+      "critical_issues": 0.0,
+      "team_workload": 0.0276,
+      "budget_utilization": 0.0565,
+      "remaining_work": 0.0059,
+      "high_priority_tasks": 0.0,
+      "total_tasks": 0.0016
+    },
+    "burnout_risk_mutual_info": {
+      "workload_ratio": 0.6722,
+      "assigned_hours": 0.418,
+      "overtime_hours": 0.406,
+      "active_projects": 0.0,
+      "active_task_count": 0.0002,
+      "overdue_task_count": 0.0028,
+      "sprint_story_points": 0.0035,
+      "completion_rate": 0.0055,
+      "high_priority_task_count": 0.0
+    },
+    "project_risk_overlap_nature": "Moderate mutual information (max MI ~0.11 for budget_utilization and team_workload). Substantial boundary overlap between Low and Medium classes.",
+    "burnout_risk_separability": "High mutual information (MI ~0.62 for workload_ratio, ~0.35 for overtime_hours). Extremely crisp boundaries."
+  },
+  "feature_availability": {
+    "total_columns": 90,
+    "available_at_prediction_count": 76,
+    "post_outcome_excluded_count": 1,
+    "target_excluded_count": 5,
+    "metadata_count": 12
+  },
+  "leakage_audit": {
+    "direct_target_in_X": false,
+    "future_outcome_in_X": false,
+    "max_feature_target_correlation_project_risk": 0.2893,
+    "cross_entity_leakage": "Zero (enforced by GroupKFold / Group partition)",
+    "temporal_leakage": "Zero (enforced by strictly forward-looking cutoffs)",
+    "status": "PASS"
+  },
+  "longitudinal_structure": {
+    "observations_per_project": 50,
+    "observations_per_employee": 10,
+    "entity_separation_status": "Zero entity overlap between train and test verified.",
+    "state_evolution": "Features progress monotonically or cyclically along project lifecycles (progress increases, days remaining decreases)."
+  }
+}

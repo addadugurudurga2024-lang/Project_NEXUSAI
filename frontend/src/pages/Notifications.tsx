@@ -18,15 +18,20 @@ interface Notification {
 }
 
 const typeIcon = (type: string, severity: string) => {
-  if (type?.includes('risk') || severity === 'high' || severity === 'critical')
-    return <AlertTriangle size={20} className="notif-icon error" />;
-  if (type?.includes('recommendation'))
-    return <Zap size={20} className="notif-icon warning" />;
-  if (type?.includes('resource') || type?.includes('task'))
+  const t = type?.toLowerCase() || '';
+  if (t.includes('project_assigned') || t.includes('issue_assigned'))
     return <Users size={20} className="notif-icon primary" />;
-  if (type?.includes('report') || type?.includes('document'))
+  if (t.includes('issue_resolved'))
+    return <CheckCheck size={20} className="notif-icon success" />;
+  if (t.includes('risk') || severity === 'high' || severity === 'critical')
+    return <AlertTriangle size={20} className="notif-icon error" />;
+  if (t.includes('recommendation'))
+    return <Zap size={20} className="notif-icon warning" />;
+  if (t.includes('resource') || t.includes('task'))
+    return <Users size={20} className="notif-icon primary" />;
+  if (t.includes('report') || t.includes('document'))
     return <FileText size={20} className="notif-icon success" />;
-  if (type?.includes('budget') || type?.includes('deadline'))
+  if (t.includes('budget') || t.includes('deadline'))
     return <TrendingUp size={20} className="notif-icon warning" />;
   return <Info size={20} className="notif-icon primary" />;
 };

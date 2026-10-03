@@ -1,0 +1,217 @@
+{
+  "audit_timestamp": "2026-10-03T07:38:20.620537+00:00",
+  "system_status": "NEXUSAI REALISTIC ENTERPRISE MULTI-PM ORGANIZATION \u2014 CERTIFIED WITHIN THE AUDITED DEVELOPMENT SCOPE",
+  "dataset_architecture": {
+    "legacy_50k_csv_removed": true,
+    "legacy_v2_csv_removed": true,
+    "source_of_truth": "MongoDB Live Entities & Relational Mappings",
+    "inference_mode": "Live Dynamic MongoDB Feature Extraction"
+  },
+  "organization_metrics": {
+    "admin_count": 1,
+    "pm_count": 12,
+    "project_count": 30,
+    "employee_count": 185,
+    "average_project_team_size": 12.0,
+    "single_project_dedicated_count": 137,
+    "single_project_dedicated_percentage": "74.05%",
+    "multi_project_specialist_count": 48,
+    "multi_project_specialist_percentage": "25.95%",
+    "task_count": 540,
+    "sprint_count": 90,
+    "issue_count": 124,
+    "prediction_count": 30,
+    "recommendation_count": 51,
+    "notification_count": 20,
+    "burnout_inferences": 0
+  },
+  "pm_distribution": [
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847080",
+      "pm_name": "Sarah Chen",
+      "department": "Financial Services",
+      "project_count": 3,
+      "project_names": [
+        "Enterprise Banking Modernization",
+        "Omnichannel Payment Gateway",
+        "NextGen Mobile Banking App"
+      ],
+      "distinct_portfolio_members": 32,
+      "dedicated_members": 15,
+      "shared_specialists": 17
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847081",
+      "pm_name": "Marcus Vance",
+      "department": "Healthcare & Life Sciences",
+      "project_count": 3,
+      "project_names": [
+        "Clinical EHR & Telehealth Portal",
+        "Patient Remote Monitoring IoT",
+        "AI Medical Imaging Diagnostic Suite"
+      ],
+      "distinct_portfolio_members": 32,
+      "dedicated_members": 15,
+      "shared_specialists": 17
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847082",
+      "pm_name": "Elena Rostova",
+      "department": "Retail & E-Commerce",
+      "project_count": 2,
+      "project_names": [
+        "Global Retail Omnichannel Platform",
+        "Supply Chain Automated Fulfillment"
+      ],
+      "distinct_portfolio_members": 22,
+      "dedicated_members": 10,
+      "shared_specialists": 12
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847083",
+      "pm_name": "David Kim",
+      "department": "Cloud Infrastructure",
+      "project_count": 3,
+      "project_names": [
+        "Enterprise Multi-Cloud Infrastructure",
+        "Legacy Core Microservices Migration",
+        "Kubernetes Service Mesh Modernization"
+      ],
+      "distinct_portfolio_members": 31,
+      "dedicated_members": 15,
+      "shared_specialists": 16
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847084",
+      "pm_name": "Priya Sharma",
+      "department": "FinTech & Risk",
+      "project_count": 2,
+      "project_names": [
+        "Real-time Fraud Detection Engine",
+        "Regulatory Compliance & AML Hub"
+      ],
+      "distinct_portfolio_members": 22,
+      "dedicated_members": 10,
+      "shared_specialists": 12
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847085",
+      "pm_name": "James Wilson",
+      "department": "Artificial Intelligence",
+      "project_count": 3,
+      "project_names": [
+        "AI Conversational Assistant Platform",
+        "Enterprise Semantic Document Search",
+        "Intelligent Knowledge Graph Service"
+      ],
+      "distinct_portfolio_members": 32,
+      "dedicated_members": 15,
+      "shared_specialists": 17
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847086",
+      "pm_name": "Amira Hassan",
+      "department": "Supply Chain & IoT",
+      "project_count": 2,
+      "project_names": [
+        "Smart Warehouse Robotics Controller",
+        "Cold Chain Logistics Tracker"
+      ],
+      "distinct_portfolio_members": 22,
+      "dedicated_members": 9,
+      "shared_specialists": 13
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847087",
+      "pm_name": "Lucas Silva",
+      "department": "Cybersecurity",
+      "project_count": 3,
+      "project_names": [
+        "Zero-Trust Identity & Access Mesh",
+        "Automated Threat Intel & SIEM Engine",
+        "Cloud Security Posture Manager"
+      ],
+      "distinct_portfolio_members": 30,
+      "dedicated_members": 12,
+      "shared_specialists": 18
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847088",
+      "pm_name": "Charlotte Dubois",
+      "department": "Enterprise HRTech",
+      "project_count": 2,
+      "project_names": [
+        "HR Talent Intelligence & Onboarding",
+        "Global Payroll & Benefits Platform"
+      ],
+      "distinct_portfolio_members": 21,
+      "dedicated_members": 8,
+      "shared_specialists": 13
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad847089",
+      "pm_name": "Alex Rodriguez",
+      "department": "Data Platform",
+      "project_count": 3,
+      "project_names": [
+        "Big Data Streaming Analytics Mesh",
+        "Enterprise Data Lakehouse Hub",
+        "Real-Time Telemetry Event Bus"
+      ],
+      "distinct_portfolio_members": 30,
+      "dedicated_members": 12,
+      "shared_specialists": 18
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad84708a",
+      "pm_name": "Yuki Tanaka",
+      "department": "Smart Infrastructure",
+      "project_count": 2,
+      "project_names": [
+        "Smart City Traffic Optimization Engine",
+        "Renewable Microgrid Energy Manager"
+      ],
+      "distinct_portfolio_members": 21,
+      "dedicated_members": 8,
+      "shared_specialists": 13
+    },
+    {
+      "pm_id": "6ac0b0bc3ed2ce90ad84708b",
+      "pm_name": "Oliver Wright",
+      "department": "CRM & Customer Experience",
+      "project_count": 2,
+      "project_names": [
+        "Enterprise B2B Partner Portal",
+        "Global Customer 360 CRM Hub"
+      ],
+      "distinct_portfolio_members": 21,
+      "dedicated_members": 8,
+      "shared_specialists": 13
+    }
+  ],
+  "security_and_rbac": {
+    "pm_isolation_verified": "PASS",
+    "cross_pm_403_access_enforced": "PASS",
+    "team_member_management_blocking": "PASS",
+    "admin_global_visibility": "PASS",
+    "ai_assistant_context_scoping": "PASS",
+    "resource_optimizer_pm_scoping": "PASS",
+    "recommendations_pm_scoping": "PASS"
+  },
+  "data_integrity": {
+    "orphan_projects": 0,
+    "orphan_tasks": 0,
+    "orphan_issues": 0,
+    "orphan_sprints": 0,
+    "orphan_assignments": 0,
+    "integrity_score": "100.0%"
+  },
+  "health_scenarios_modeled": [
+    "Scenario A \u2014 Healthy (Low risk, steady progress, no critical issues)",
+    "Scenario B \u2014 Schedule Pressure (High overdue tasks, velocity decline)",
+    "Scenario C \u2014 Resource Overload (Members >100% capacity, rebalancing candidate exists)",
+    "Scenario D \u2014 Budget Pressure (High burn rate lagging behind progress)",
+    "Scenario E \u2014 Quality Risk (Critical bugs and issue concentration)",
+    "Scenario F \u2014 Multi-Project Resource Conflict (Shared specialist allocated >100% total)"
+  ]
+}

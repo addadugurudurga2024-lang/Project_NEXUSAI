@@ -69,6 +69,8 @@ const Signup: React.FC = () => {
   const [skillSelect, setSkillSelect] = useState('');
   const [customSkill, setCustomSkill] = useState('');
   const [weeklyCapacity, setWeeklyCapacity] = useState<number>(40);
+  const [preferredPmId, setPreferredPmId] = useState('');
+  const [pmsList, setPmsList] = useState<any[]>([]);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +78,15 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
 
   const isTeamMember = role === 'team_member';
+
+  // Fetch available PMs when team_member role is selected
+  React.useEffect(() => {
+    if (isTeamMember) {
+      api.get('/team-capacity/pms')
+        .then(res => setPmsList(res.data))
+        .catch(() => {});
+    }
+  }, [isTeamMember]);
 
   // Resolve "Other/Custom" values to the custom text entry
   const resolvedJobRole = jobRole === 'Other / Custom' ? customJobRole.trim() : jobRole;
@@ -127,6 +138,9 @@ const Signup: React.FC = () => {
         payload.specialization = resolvedSpecialization;
         payload.skills = skills;
         payload.weekly_capacity_hours = weeklyCapacity;
+        if (preferredPmId) {
+          payload.preferred_pm_id = preferredPmId;
+        }
       }
 
       const response = await api.post('/auth/signup', payload);
@@ -345,6 +359,27 @@ const Signup: React.FC = () => {
                   max={168}
                   required={isTeamMember}
                 />
+              </div>
+
+              {/* Preferred Project Manager */}
+              <div className="form-group">
+                <label htmlFor="preferredPm">Preferred Project Manager (Optional)</label>
+                <select
+                  id="preferredPm"
+                  value={preferredPmId}
+                  onChange={(e) => setPreferredPmId(e.target.value)}
+                  className="role-select"
+                >
+                  <option value="">Select a preferred Project Manager…</option>
+                  {pmsList.map(pm => (
+                    <option key={pm.pm_user_id} value={pm.pm_user_id}>
+                      {pm.name} ({pm.active_members_count}/18 slots occupied {pm.is_full ? '— FULL' : `— ${pm.available_capacity} available`})
+                    </option>
+                  ))}
+                </select>
+                <p className="skills-hint" style={{ marginTop: '4px' }}>
+                  Your preferred PM will receive an association request to review and approve your active team placement.
+                </p>
               </div>
             </div>
           )}

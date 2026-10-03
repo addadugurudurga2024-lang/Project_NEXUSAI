@@ -62,34 +62,81 @@ async def list_tasks(
 ):
     """
     RBAC:
-    - admin / project_manager → see all tasks (or filtered)
+    - admin → see all tasks (or filtered)
+    - project_manager → see tasks within their authorized managed projects
     - team_member → see only tasks assigned to their employee profile
     """
     role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
     query = {}
-    if project_id:
-        query["project_id"] = project_id
-    if sprint_id:
-        query["sprint_id"] = sprint_id
     if status:
         query["status"] = status
+    if sprint_id:
+        query["sprint_id"] = sprint_id
 
-    if role == "team_member":
-        # Override assignee_id filter — team members can only see their own tasks
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+    if role == "admin":
+        if project_id:
+            query["project_id"] = project_id
+        if assignee_id:
+            query["assignee_id"] = assignee_id
+    elif role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id:
+            if project_id not in authorized_pids:
+                return []
+            query["project_id"] = project_id
+        else:
+            query["project_id"] = {"$in": authorized_pids}
+        if assignee_id:
+            query["assignee_id"] = assignee_id
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if emp:
             query["assignee_id"] = str(emp["_id"])
+            if project_id:
+                query["project_id"] = project_id
         else:
             return []
-    elif assignee_id:
-        query["assignee_id"] = assignee_id
 
-    tasks = await db.tasks.find(query).sort("created_at", -1).to_list(500)
+    tasks = await db.tasks.find(query).sort("created_at", -1).to_list(1000)
     result = []
     for t in tasks:
         name = await _resolve_assignee_name(db, t["assignee_id"]) if t.get("assignee_id") else None
         result.append(serialize_task(t, name))
     return result
+
+
+@router.get("/{task_id}", response_model=TaskResponse)
+async def get_task(
+    task_id: str,
+    current_user=Depends(get_current_user),
+    db=Depends(get_database),
+):
+    try:
+        t = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid task ID")
+    if not t:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    project_id = str(t.get("project_id", ""))
+
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Task belongs to another PM's project")
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        emp_id = str(emp["_id"]) if emp else ""
+        if str(t.get("assignee_id", "")) != emp_id:
+            raise HTTPException(status_code=403, detail="Access denied: You can only view your own tasks")
+
+    name = await _resolve_assignee_name(db, t["assignee_id"]) if t.get("assignee_id") else None
+    return serialize_task(t, name)
 
 
 @router.post("/", response_model=TaskResponse)
@@ -98,11 +145,19 @@ async def create_task(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    # RBAC: team_members cannot create tasks
-    if current_user.get("role") == "team_member":
+    role = current_user.get("role", "team_member")
+    if role == "team_member":
         raise HTTPException(status_code=403, detail="Team members cannot create tasks")
 
     doc = data.model_dump()
+    project_id = str(doc.get("project_id", ""))
+
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot create tasks in another PM's project")
+
     doc["created_at"] = datetime.utcnow()
     doc["updated_at"] = datetime.utcnow()
     result = await db.tasks.insert_one(doc)
@@ -110,13 +165,13 @@ async def create_task(
     task_id = str(result.inserted_id)
 
     actor_name = current_user.get("name", current_user.get("email", "Unknown"))
-    project_name = await _resolve_project_name(db, doc.get("project_id", ""))
+    project_name = await _resolve_project_name(db, project_id)
 
     # Phase 6: TASK_CREATED activity
-    if doc.get("project_id"):
+    if project_id:
         await create_activity(
             db=db,
-            project_id=doc["project_id"],
+            project_id=project_id,
             activity_type="TASK_CREATED",
             message=f"Task '{doc.get('title')}' created by {actor_name}",
             actor_user_id=str(current_user["_id"]),
@@ -130,11 +185,10 @@ async def create_task(
             emp = await db.employees.find_one({"_id": ObjectId(doc["assignee_id"])})
             emp_name = emp.get("name", doc["assignee_id"]) if emp else doc["assignee_id"]
 
-            # Phase 6: TASK_ASSIGNED activity
-            if doc.get("project_id"):
+            if project_id:
                 await create_activity(
                     db=db,
-                    project_id=doc["project_id"],
+                    project_id=project_id,
                     activity_type="TASK_ASSIGNED",
                     message=f"Task '{doc.get('title')}' assigned to {emp_name}",
                     actor_user_id=str(current_user["_id"]),
@@ -142,7 +196,6 @@ async def create_task(
                     related_entity_id=task_id,
                 )
 
-            # Notification for assignee
             target_uid = emp.get("user_id") if emp else None
             if not target_uid and emp and emp.get("email"):
                 u = await db.users.find_one({"email": emp["email"]})
@@ -157,7 +210,7 @@ async def create_task(
                     notification_type="task_assignment",
                     title="New Task Assigned",
                     message=f"You have been assigned to task '{doc.get('title')}' in {project_name or 'a project'}. Priority: {doc.get('priority', 'medium')}.",
-                    related_project_id=doc.get("project_id"),
+                    related_project_id=project_id,
                     severity="medium",
                 )
         except Exception:
@@ -183,13 +236,18 @@ async def update_task(
     role = current_user.get("role", "team_member")
     old_assignee = t.get("assignee_id")
     old_status = t.get("status", "todo")
+    project_id = str(t.get("project_id", ""))
 
-    # RBAC: team_member can only update their own task status — no reassignment
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: You cannot update another PM's task")
+
     if role == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+        emp = await db.employees.find_one({"$or": [{"user_id": str(current_user["_id"])}, {"email": current_user.get("email")}]})
         if not emp or str(emp["_id"]) != old_assignee:
             raise HTTPException(status_code=403, detail="You can only update your own tasks")
-        # Strip fields team_members cannot change
         allowed_fields = {"status", "actual_hours", "completion_percentage"}
         update_data = {
             k: v for k, v in data.model_dump().items()
@@ -203,12 +261,10 @@ async def update_task(
     updated = await db.tasks.find_one({"_id": ObjectId(task_id)})
 
     actor_name = current_user.get("name", current_user.get("email", "Unknown"))
-    project_id = updated.get("project_id", "")
     project_name = await _resolve_project_name(db, project_id) if project_id else ""
     new_assignee = updated.get("assignee_id")
     new_status = updated.get("status", old_status)
 
-    # Phase 6: TASK_REASSIGNED activity + notification
     if new_assignee and new_assignee != old_assignee and project_id:
         try:
             emp = await db.employees.find_one({"_id": ObjectId(new_assignee)})
@@ -224,7 +280,6 @@ async def update_task(
                 related_entity_id=task_id,
             )
 
-            # Notification for new assignee
             target_uid = emp.get("user_id") if emp else None
             if not target_uid and emp and emp.get("email"):
                 u = await db.users.find_one({"email": emp["email"]})
@@ -245,7 +300,6 @@ async def update_task(
         except Exception:
             pass
 
-    # Phase 6: TASK_STATUS_CHANGED activity
     if new_status != old_status and project_id:
         await create_activity(
             db=db,
@@ -267,13 +321,25 @@ async def delete_task(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    # Only managers/admins can delete tasks
-    if current_user.get("role") == "team_member":
+    role = current_user.get("role", "team_member")
+    if role == "team_member":
         raise HTTPException(status_code=403, detail="Team members cannot delete tasks")
+
     try:
-        result = await db.tasks.delete_one({"_id": ObjectId(task_id)})
+        t = await db.tasks.find_one({"_id": ObjectId(task_id)})
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid task ID")
+    if not t:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    project_id = str(t.get("project_id", ""))
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: You cannot delete another PM's task")
+
+    result = await db.tasks.delete_one({"_id": ObjectId(task_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task deleted successfully"}

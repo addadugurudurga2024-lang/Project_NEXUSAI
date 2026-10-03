@@ -109,6 +109,19 @@ async def predict_project_risk(
     features = gathered["features"]
     project = gathered["project"]
 
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    if role == "project_manager":
+        mgr_id = str(project.get("manager_id") or project.get("project_manager_id") or project.get("created_by") or "")
+        if mgr_id != uid:
+            raise HTTPException(status_code=403, detail="Access denied: You do not manage this project")
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
+        emp_id = str(emp["_id"]) if emp else ""
+        team_ids = [str(x) for x in project.get("team_member_ids", [])]
+        if uid not in team_ids and emp_id not in team_ids:
+            raise HTTPException(status_code=403, detail="Access denied: You are not assigned to this project")
+
     # Run inference
     risk_result = predict_project_risk_inference(features)
     delay_result = predict_deadline_delay(features, project)

@@ -199,33 +199,66 @@ async def get_project_analytics(
     """
     today = _today()
     projects = await _get_scoped_projects(db, current_user)
-    result = []
+    if not projects:
+        return []
 
+    pids = [str(p["_id"]) for p in projects]
+    pid_objs = [ObjectId(p) for p in pids if ObjectId.is_valid(p)]
+
+    # Batch task aggregation
+    task_agg = await db.tasks.aggregate([
+        {"$match": {"$or": [{"project_id": {"$in": pids}}, {"project_id": {"$in": pid_objs}}]}},
+        {"$group": {
+            "_id": "$project_id",
+            "total": {"$sum": 1},
+            "done": {"$sum": {"$cond": [{"$eq": ["$status", "done"]}, 1, 0]}},
+            "in_progress": {"$sum": {"$cond": [{"$eq": ["$status", "in_progress"]}, 1, 0]}},
+            "overdue": {"$sum": {"$cond": [
+                {"$and": [
+                    {"$ne": ["$status", "done"]},
+                    {"$lt": ["$due_date", today]}
+                ]},
+                1, 0
+            ]}}
+        }}
+    ]).to_list(len(pids) + 50)
+    task_map = {str(item["_id"]): item for item in task_agg}
+
+    # Batch issue aggregation
+    issue_agg = await db.issues.aggregate([
+        {"$match": {"$or": [{"project_id": {"$in": pids}}, {"project_id": {"$in": pid_objs}}]}},
+        {"$group": {
+            "_id": "$project_id",
+            "open": {"$sum": {"$cond": [{"$eq": ["$status", "open"]}, 1, 0]}},
+            "resolved": {"$sum": {"$cond": [{"$eq": ["$status", "resolved"]}, 1, 0]}}
+        }}
+    ]).to_list(len(pids) + 50)
+    issue_map = {str(item["_id"]): item for item in issue_agg}
+
+    # Batch predictions
+    preds = await db.project_predictions.find({
+        "$or": [{"project_id": {"$in": pids}}, {"project_id": {"$in": pid_objs}}]
+    }).to_list(len(pids) + 50)
+    pred_map = {str(pr.get("project_id")): pr for pr in preds}
+
+    result = []
     for p in projects:
         pid = str(p["_id"])
+        t_stat = task_map.get(pid, {})
+        i_stat = issue_map.get(pid, {})
+        pred = pred_map.get(pid)
 
-        # Tasks for this project
-        total_tasks = await db.tasks.count_documents({"project_id": pid})
-        done_tasks = await db.tasks.count_documents({"project_id": pid, "status": "done"})
-        inprog_tasks = await db.tasks.count_documents({"project_id": pid, "status": "in_progress"})
-        overdue_tasks = await db.tasks.count_documents({
-            "project_id": pid,
-            "status": {"$nin": ["done"]},
-            "due_date": {"$lt": today}
-        })
+        total_tasks = t_stat.get("total", 0)
+        done_tasks = t_stat.get("done", 0)
+        inprog_tasks = t_stat.get("in_progress", 0)
+        overdue_tasks = t_stat.get("overdue", 0)
 
-        # Issues
-        open_issues = await db.issues.count_documents({"project_id": pid, "status": "open"})
-        resolved_issues = await db.issues.count_documents({"project_id": pid, "status": "resolved"})
+        open_issues = i_stat.get("open", 0)
+        resolved_issues = i_stat.get("resolved", 0)
 
-        # Budget
-        budget = p.get("budget", 0)
-        spent = p.get("current_expenditure", 0)
+        budget = float(p.get("budget", 0) or 0)
+        spent = float(p.get("current_expenditure", 0) or 0)
         budget_util = round((spent / budget * 100), 1) if budget > 0 else 0
-
-        # ML prediction
-        pid_obj = ObjectId(pid) if ObjectId.is_valid(pid) else None
-        pred = await db.project_predictions.find_one({"$or": [{"project_id": pid}, {"project_id": pid_obj}]} if pid_obj else {"project_id": pid})
 
         completion_rate = round((done_tasks / total_tasks * 100), 1) if total_tasks > 0 else 0
 
@@ -294,7 +327,43 @@ async def get_team_analytics(
 
     emps = await db.employees.find(
         {"_id": {"$in": [ObjectId(eid) for eid in emp_ids]}}
-    ).to_list(500)
+    ).to_list(len(emp_ids) + 50)
+
+    eid_strs = [str(e["_id"]) for e in emps]
+    eid_objs = [e["_id"] for e in emps]
+
+    task_agg = await db.tasks.aggregate([
+        {"$match": {"$or": [
+            {"assignee_id": {"$in": eid_strs}},
+            {"assignee_id": {"$in": eid_objs}},
+            {"assigned_to": {"$in": eid_strs}},
+            {"assigned_to": {"$in": eid_objs}},
+        ]}},
+        {"$group": {
+            "_id": "$assignee_id",
+            "total": {"$sum": 1},
+            "done": {"$sum": {"$cond": [{"$eq": ["$status", "done"]}, 1, 0]}},
+            "active": {"$sum": {"$cond": [{"$ne": ["$status", "done"]}, 1, 0]}},
+            "overdue": {"$sum": {"$cond": [
+                {"$and": [
+                    {"$ne": ["$status", "done"]},
+                    {"$lt": ["$due_date", today]}
+                ]},
+                1, 0
+            ]}},
+            "assigned_hours": {"$sum": {"$cond": [
+                {"$ne": ["$status", "done"]},
+                {"$ifNull": ["$estimated_hours", 0]},
+                0
+            ]}}
+        }}
+    ]).to_list(len(eid_strs) + 50)
+    task_map = {str(item["_id"]): item for item in task_agg}
+
+    burnout_preds = await db.employee_risk_predictions.find({
+        "$or": [{"employee_id": {"$in": eid_strs}}, {"employee_id": {"$in": eid_objs}}]
+    }).to_list(len(eid_strs) + 50)
+    burnout_map = {str(b.get("employee_id")): b for b in burnout_preds}
 
     result = []
     above_capacity = 0
@@ -303,42 +372,17 @@ async def get_team_analytics(
 
     for emp in emps:
         emp_id = str(emp["_id"])
-        cap = emp.get("weekly_capacity_hours", 40)
+        cap = emp.get("weekly_capacity_hours", 40) or 40
+        t_stat = task_map.get(emp_id, {})
+        total_tasks = t_stat.get("total", 0)
+        done_tasks = t_stat.get("done", 0)
+        active_tasks = t_stat.get("active", 0)
+        overdue_tasks = t_stat.get("overdue", 0)
+        assigned_hours = t_stat.get("assigned_hours", 0.0)
 
-        # Tasks (canonical active tasks)
-        active_task_docs = await db.tasks.find({
-            "$or": [
-                {"assignee_id": emp_id},
-                {"assignee_id": ObjectId(emp_id) if ObjectId.is_valid(emp_id) else emp_id},
-                {"assigned_to": emp_id},
-            ],
-            "status": {"$nin": ["done"]},
-        }).to_list(500)
-        
-        total_tasks = await db.tasks.count_documents({
-            "$or": [
-                {"assignee_id": emp_id},
-                {"assignee_id": ObjectId(emp_id) if ObjectId.is_valid(emp_id) else emp_id},
-                {"assigned_to": emp_id},
-            ]
-        })
-        done_tasks = await db.tasks.count_documents({
-            "$or": [
-                {"assignee_id": emp_id},
-                {"assignee_id": ObjectId(emp_id) if ObjectId.is_valid(emp_id) else emp_id},
-                {"assigned_to": emp_id},
-            ],
-            "status": "done"
-        })
-        active_tasks = len(active_task_docs)
-        overdue_tasks = sum(1 for t in active_task_docs if t.get("due_date") and str(t.get("due_date")) < today)
-
-        # Estimated workload hours from active tasks
-        assigned_hours = sum(float(t.get("estimated_hours", 0) or 0) for t in active_task_docs)
         workload_ratio = round((assigned_hours / cap * 100), 1) if cap > 0 else 0
 
-        # ML burnout prediction
-        burnout = await db.employee_risk_predictions.find_one({"employee_id": emp_id})
+        burnout = burnout_map.get(emp_id)
         risk_level = burnout.get("risk_level", "LOW") if burnout else ("HIGH" if workload_ratio > 110 else "LOW")
         risk_prob = burnout.get("risk_probability", None) if burnout else None
 
@@ -410,7 +454,7 @@ async def get_risk_analytics(
             {"project_id": {"$in": valid_obj_ids}},
         ]
     } if project_ids else {"_id": None}
-    proj_preds = await db.project_predictions.find(pred_query).to_list(500)
+    proj_preds = await db.project_predictions.find(pred_query).to_list(2000)
 
     # Group by risk class
     risk_groups = {"HIGH": [], "MEDIUM": [], "LOW": [], "UNKNOWN": []}
@@ -456,7 +500,7 @@ async def get_risk_analytics(
     if emp_ids or current_user.get("role") == "admin":
         burnout_preds = await db.employee_risk_predictions.find(
             {"employee_id": {"$in": emp_ids}} if emp_ids else {}
-        ).to_list(500)
+        ).to_list(6000)
     else:
         burnout_preds = []
 
@@ -674,27 +718,42 @@ async def get_executive_insights(
 
     # 3. Severe workload overload (e.g. Alex Rodriguez at 300%)
     overloaded_emps = []
-    for eid in emp_ids:
-        try:
-            emp = await db.employees.find_one({"_id": ObjectId(eid)})
-            if not emp:
-                continue
-            cap = float(emp.get("weekly_capacity_hours", 40) or 40)
-            active_tasks = await db.tasks.find({
-                "$or": [{"assignee_id": eid}, {"assignee_id": ObjectId(eid)}, {"assigned_to": eid}],
-                "status": {"$nin": ["done"]},
-            }).to_list(500)
-            hours = sum(float(t.get("estimated_hours", 0) or 0) for t in active_tasks)
-            load_pct = (hours / cap * 100) if cap > 0 else 0
-            if load_pct > 100:
-                overloaded_emps.append({
-                    "name": emp.get("name", "Employee"),
-                    "hours": hours,
-                    "cap": cap,
-                    "load_pct": load_pct,
-                })
-        except Exception:
-            pass
+    task_load_agg = await db.tasks.aggregate([
+        {"$match": {
+            "$or": [
+                {"assignee_id": {"$in": emp_ids}},
+                {"assignee_id": {"$in": [ObjectId(eid) for eid in emp_ids if ObjectId.is_valid(eid)]}},
+                {"assigned_to": {"$in": emp_ids}},
+            ],
+            "status": {"$nin": ["done"]}
+        }},
+        {"$group": {
+            "_id": "$assignee_id",
+            "total_hours": {"$sum": {"$ifNull": ["$estimated_hours", 0]}}
+        }},
+        {"$sort": {"total_hours": -1}},
+        {"$limit": 20}
+    ]).to_list(20)
+
+    top_eids = [ObjectId(str(item["_id"])) for item in task_load_agg if ObjectId.is_valid(str(item["_id"]))]
+    top_emps = await db.employees.find({"_id": {"$in": top_eids}}).to_list(len(top_eids))
+    emp_map = {str(e["_id"]): e for e in top_emps}
+
+    for item in task_load_agg:
+        eid = str(item["_id"])
+        emp = emp_map.get(eid)
+        if not emp:
+            continue
+        cap = float(emp.get("weekly_capacity_hours", 40) or 40)
+        hours = float(item["total_hours"])
+        load_pct = (hours / cap * 100) if cap > 0 else 0
+        if load_pct > 100:
+            overloaded_emps.append({
+                "name": emp.get("name", "Employee"),
+                "hours": hours,
+                "cap": cap,
+                "load_pct": load_pct,
+            })
 
     for o_emp in sorted(overloaded_emps, key=lambda x: x["load_pct"], reverse=True)[:2]:
         insights.append({

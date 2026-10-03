@@ -39,30 +39,41 @@ async def list_recommendations(
     db=Depends(get_database),
 ):
     role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
     query = {}
-    if project_id:
-        query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
     if status:
         query["status"] = status
     if priority:
         query["priority"] = priority
 
-    if role == "team_member":
-        emp = await db.employees.find_one({"user_id": str(current_user["_id"])})
+    if role == "admin":
+        if project_id:
+            query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
+    elif role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        proj_ids = await get_authorized_project_ids(db, current_user)
+        if project_id:
+            if project_id not in proj_ids:
+                return []
+            query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
+        else:
+            query["$or"] = [{"projectId": {"$in": proj_ids}}, {"project_id": {"$in": proj_ids}}]
+    elif role == "team_member":
+        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
         if emp:
             emp_id = str(emp["_id"])
             assigned_projects = await db.projects.find({"team_member_ids": emp_id}).to_list(100)
             proj_ids = [str(p["_id"]) for p in assigned_projects]
-            if "$or" in query:
-                # If specific project requested, verify user belongs to it
+            if project_id:
                 if project_id not in proj_ids:
                     return []
+                query["$or"] = [{"projectId": project_id}, {"project_id": project_id}]
             else:
                 query["$or"] = [{"projectId": {"$in": proj_ids}}, {"project_id": {"$in": proj_ids}}]
         else:
             return []
 
-    recs = await db.recommendations.find(query).sort("createdAt", -1).to_list(500)
+    recs = await db.recommendations.find(query).sort([("created_at", -1), ("createdAt", -1)]).to_list(2000)
     return [serialize_rec(r) for r in recs]
 
 
@@ -81,6 +92,13 @@ async def generate_recommendations(
         raise HTTPException(status_code=400, detail="Invalid project ID")
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+    if role == "project_manager":
+        mgr_id = str(project.get("manager_id") or project.get("project_manager_id") or project.get("created_by") or "")
+        if mgr_id != uid:
+            raise HTTPException(status_code=403, detail="Access denied: You do not manage this project")
 
     recommendations = await generate_project_recommendations(project_id, db)
     return {"recommendations": recommendations, "count": len(recommendations)}
@@ -106,6 +124,14 @@ async def update_recommendation_status(
 
     if not rec:
         raise HTTPException(status_code=404, detail="Recommendation not found")
+
+    role = current_user.get("role", "team_member")
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        rec_pid = str(rec.get("projectId") or rec.get("project_id") or "")
+        if rec_pid not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot update another PM's recommendation")
 
     update_fields = {
         "status": data.status,
@@ -139,6 +165,14 @@ async def accept_recommendation(
 
     if not rec:
         raise HTTPException(status_code=404, detail="Recommendation not found")
+
+    role = current_user.get("role", "team_member")
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        rec_pid = str(rec.get("projectId") or rec.get("project_id") or "")
+        if rec_pid not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot accept another PM's recommendation")
 
     await db.recommendations.update_one(
         {"_id": ObjectId(rec_id)},

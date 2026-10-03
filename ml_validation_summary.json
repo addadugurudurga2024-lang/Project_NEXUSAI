@@ -1,0 +1,391 @@
+{
+  "dataset_name": "NexusAI_50K_Final_Integrated_Synthetic_Dataset.csv",
+  "dataset_rows": 50000,
+  "dataset_type": "Synthetic Longitudinal Operational Dataset (Source-Informed Development Data)",
+  "sha256_before": "7479ac243e7fc3403c6799bc8679c96f48292f00dc9743c7680c8de66a4c2cf5",
+  "sha256_after": "7479ac243e7fc3403c6799bc8679c96f48292f00dc9743c7680c8de66a4c2cf5",
+  "dataset_changed": false,
+  "evaluation_strategy": "Triple-Perspective Benchmark: (1) Naive Baseline, (2) Group-Aware Held-Out Test, (3) Chronological Temporal Evaluation",
+  "timestamp": "2026-10-03 05:25:00 UTC",
+  "provenance": "The NexusAI dataset was constructed by integrating and adapting feature definitions, value distributions, and domain patterns from multiple publicly available Kaggle datasets. The source datasets were normalized to a common schema and mapped to NexusAI entities such as projects, tasks, employees and risk indicators. Additional derived fields were calculated to satisfy NexusAI's application and ML requirements.",
+  "models": {
+    "project_risk": {
+      "model_name": "Project Risk Classification",
+      "model_type": "RandomForestClassifier",
+      "artifact_version": "v2.0",
+      "active_model_path": "models/project_risk_model.pkl",
+      "active_scaler_path": "models/project_risk_scaler.pkl",
+      "rollback_v1_path": "models/v1/project_risk_model.pkl",
+      "features_count": 11,
+      "baseline_metrics": {
+        "accuracy": 0.4554,
+        "macro_f1": 0.2086
+      },
+      "v1_metrics": {
+        "accuracy": 0.2448,
+        "macro_f1": 0.1323
+      },
+      "v2_metrics": {
+        "accuracy": 0.4934,
+        "macro_f1": 0.4923,
+        "weighted_f1": 0.5033,
+        "balanced_accuracy": 0.4956,
+        "roc_auc": 0.6856,
+        "confusion_matrix": [
+          [
+            1135,
+            909,
+            233
+          ],
+          [
+            402,
+            669,
+            431
+          ],
+          [
+            143,
+            415,
+            663
+          ]
+        ]
+      },
+      "group_test_metrics": {
+        "accuracy": 0.4934,
+        "macro_f1": 0.4923,
+        "weighted_f1": 0.5033,
+        "balanced_accuracy": 0.4956,
+        "roc_auc": 0.6856,
+        "confusion_matrix": [
+          [
+            1135,
+            909,
+            233
+          ],
+          [
+            402,
+            669,
+            431
+          ],
+          [
+            143,
+            415,
+            663
+          ]
+        ]
+      },
+      "temporal_test_metrics": {
+        "accuracy": 0.5513,
+        "macro_f1": 0.5522,
+        "balanced_accuracy": 0.5602,
+        "roc_auc": 0.7556
+      },
+      "validation_benchmark": {
+        "random_forest": {
+          "accuracy": 0.4988,
+          "macro_f1": 0.5021,
+          "balanced_acc": 0.5048
+        },
+        "xgboost": {
+          "accuracy": 0.5404,
+          "macro_f1": 0.4469,
+          "balanced_acc": 0.4942
+        },
+        "hist_gradient_boosting": {
+          "accuracy": 0.5392,
+          "macro_f1": 0.4471,
+          "balanced_acc": 0.4934
+        },
+        "feature_engineering_rf_macro_f1": 0.5048
+      },
+      "leakage_status": "PASS",
+      "group_separation_status": "PASS",
+      "temporal_robustness_status": "PASS",
+      "inference_status": "PASS",
+      "regression_test_status": "PASS",
+      "certification_status": "PASS",
+      "promotion_status": "NO_MODEL_CHANGE_REQUIRED (v2.0 Retained)",
+      "root_cause_limitation": {
+        "primary": "G. Noise / Ambiguity",
+        "secondary": "C. Target Construction",
+        "explanation": "Low mutual information (<0.06) across all features; continuous fuzzy boundary overlap between Low and Medium project risk classes."
+      },
+      "realism_90_pct": {
+        "verdict": "UNSUPPORTED",
+        "evidence": "Plateaus at 49.36% group / 55.13% temporal accuracy across RF, XGBoost, and HistGB; target reflects complex continuous organizational risk rather than crisp separable clusters."
+      }
+    },
+    "burnout_risk": {
+      "model_name": "Employee Burnout Risk Classification",
+      "model_type": "RandomForestClassifier",
+      "artifact_version": "v2.0",
+      "active_model_path": "models/burnout_risk_model.pkl",
+      "active_scaler_path": "models/burnout_risk_scaler.pkl",
+      "rollback_v1_path": "models/v1/burnout_risk_model.pkl",
+      "features_count": 9,
+      "baseline_metrics": {
+        "accuracy": 0.454,
+        "macro_f1": 0.2082
+      },
+      "v1_metrics": {
+        "accuracy": 0.4275,
+        "macro_f1": 0.4278
+      },
+      "v2_metrics": {
+        "accuracy": 0.8877,
+        "macro_f1": 0.8736,
+        "weighted_f1": 0.8887,
+        "balanced_accuracy": 0.8743,
+        "roc_auc": 0.9762,
+        "brier_score": 0.0522,
+        "confusion_matrix": [
+          [
+            2165,
+            119,
+            0
+          ],
+          [
+            61,
+            1220,
+            171
+          ],
+          [
+            0,
+            214,
+            1081
+          ]
+        ]
+      },
+      "group_test_metrics": {
+        "accuracy": 0.8877,
+        "macro_f1": 0.8736,
+        "weighted_f1": 0.8887,
+        "balanced_accuracy": 0.8743,
+        "roc_auc": 0.9762,
+        "brier_score": 0.0522,
+        "confusion_matrix": [
+          [
+            2165,
+            119,
+            0
+          ],
+          [
+            61,
+            1220,
+            171
+          ],
+          [
+            0,
+            214,
+            1081
+          ]
+        ]
+      },
+      "temporal_test_metrics": {
+        "accuracy": 0.898,
+        "macro_f1": 0.8871,
+        "roc_auc": 0.9807
+      },
+      "validation_benchmark": {
+        "random_forest": {
+          "accuracy": 0.8817,
+          "macro_f1": 0.8682
+        },
+        "xgboost": {
+          "accuracy": 0.8806,
+          "macro_f1": 0.866
+        },
+        "hist_gradient_boosting": {
+          "accuracy": 0.8808,
+          "macro_f1": 0.8662
+        }
+      },
+      "leakage_status": "PASS",
+      "group_separation_status": "PASS",
+      "temporal_robustness_status": "PASS",
+      "inference_status": "PASS",
+      "regression_test_status": "PASS",
+      "certification_status": "PASS",
+      "promotion_status": "NO_MODEL_CHANGE_REQUIRED (v2.0 Retained)",
+      "root_cause_limitation": {
+        "primary": "C. Target Construction",
+        "secondary": "B. Feature Quality",
+        "explanation": "Target is strongly mechanically driven by workload_ratio (>100% capacity) and overtime_hours; high accuracy is mathematically authentic to dataset formulation."
+      },
+      "realism_90_pct": {
+        "verdict": "POSSIBLE",
+        "evidence": "Currently achieves 88.75% group / 89.80% temporal accuracy and 0.9762 ROC-AUC; 90% is within statistical reach."
+      }
+    },
+    "deadline_delay": {
+      "model_name": "Deadline Delay Regression",
+      "model_type": "GradientBoostingRegressor",
+      "artifact_version": "v2.0",
+      "active_model_path": "models/deadline_delay_model.pkl",
+      "active_scaler_path": "models/deadline_delay_scaler.pkl",
+      "rollback_v1_path": "models/v1/deadline_delay_model.pkl",
+      "features_count": 9,
+      "baseline_metrics": {
+        "mae": 5.21,
+        "rmse": 6.62,
+        "r2": -0.0012
+      },
+      "v1_metrics": {
+        "mae": 6.75,
+        "rmse": 8.57,
+        "r2": -0.6766
+      },
+      "v2_metrics": {
+        "mae": 4.64,
+        "rmse": 5.78,
+        "r2": 0.2362,
+        "median_ae": 3.94,
+        "p90_ae": 9.59,
+        "p95_ae": 11.32
+      },
+      "group_test_metrics": {
+        "mae": 4.64,
+        "rmse": 5.78,
+        "r2": 0.2362,
+        "median_ae": 3.94,
+        "p90_ae": 9.59,
+        "p95_ae": 11.32
+      },
+      "temporal_test_metrics": {
+        "mae": 4.5,
+        "rmse": 5.58,
+        "r2": 0.2948,
+        "median_ae": 3.86,
+        "p90_ae": 9.23
+      },
+      "validation_benchmark": {
+        "gradient_boosting": {
+          "mae": 4.6,
+          "r2": 0.2529
+        },
+        "xgboost": {
+          "mae": 4.61,
+          "r2": 0.2509
+        },
+        "hist_gradient_boosting": {
+          "mae": 4.6,
+          "r2": 0.2524
+        }
+      },
+      "leakage_status": "PASS",
+      "group_separation_status": "PASS",
+      "temporal_robustness_status": "PASS",
+      "inference_status": "PASS",
+      "regression_test_status": "PASS",
+      "certification_status": "PASS",
+      "promotion_status": "NO_MODEL_CHANGE_REQUIRED (v2.0 Retained)",
+      "root_cause_limitation": {
+        "primary": "F. Temporal Variation",
+        "secondary": "G. Noise / Ambiguity",
+        "explanation": "Unforeseen late-stage defect spikes and scope adjustments introduce irreducible tail delay variation (P95 AE = 11.32 days)."
+      },
+      "realistically_supported_error": {
+        "mae": 4.5,
+        "rmse": 5.58,
+        "r2": 0.2948,
+        "median_ae": 3.86,
+        "p90_ae": 9.23
+      }
+    },
+    "budget_overrun": {
+      "model_name": "Budget Overrun Regression",
+      "model_type": "GradientBoostingRegressor",
+      "artifact_version": "v2.0",
+      "active_model_path": "models/budget_overrun_model.pkl",
+      "active_scaler_path": "models/budget_overrun_scaler.pkl",
+      "rollback_v1_path": "models/v1/budget_overrun_model.pkl",
+      "features_count": 8,
+      "baseline_metrics": {
+        "mae": 15979.97,
+        "rmse": 30779.68,
+        "r2": -0.0038
+      },
+      "v1_metrics": {
+        "mae": 22799.91,
+        "rmse": 115632.57,
+        "r2": -13.1676
+      },
+      "v2_metrics": {
+        "mae_all": 3005.43,
+        "mae_positive_only": 8132.98,
+        "rmse": 8745.48,
+        "r2": 0.919,
+        "median_ae": 123.08,
+        "p90_ae": 9041.61,
+        "p95_ae": 15287.18,
+        "zero_target_pct": 67.24
+      },
+      "group_test_metrics": {
+        "mae_all": 3005.43,
+        "mae_positive_only": 8132.98,
+        "rmse": 8745.48,
+        "r2": 0.919,
+        "median_ae": 123.08,
+        "p90_ae": 9041.61,
+        "p95_ae": 15287.18,
+        "zero_target_pct": 67.24
+      },
+      "temporal_test_metrics": {
+        "mae_all": 2123.34,
+        "rmse": 5239.91,
+        "r2": 0.9361,
+        "median_ae": 80.2,
+        "p90_ae": 6851.59,
+        "zero_target_pct": 68.69
+      },
+      "validation_benchmark": {
+        "gradient_boosting": {
+          "mae": 2626.93,
+          "r2": 0.9143
+        },
+        "xgboost": {
+          "mae": 2737.3,
+          "r2": 0.9146
+        },
+        "two_stage_hurdle": {
+          "mae": 2606.64,
+          "r2": 0.9088
+        }
+      },
+      "leakage_status": "PASS",
+      "group_separation_status": "PASS",
+      "temporal_robustness_status": "PASS",
+      "inference_status": "PASS",
+      "regression_test_status": "PASS",
+      "certification_status": "PASS",
+      "promotion_status": "NO_MODEL_CHANGE_REQUIRED (v2.0 Retained)",
+      "root_cause_limitation": {
+        "primary": "D. Dataset Structure",
+        "secondary": "C. Target Construction",
+        "explanation": "68.09% of target values are zero-clamped; high R\u00b2 (>0.91) reflects accurate zero-bound separation; median AE ($80-$123) is the primary operational metric."
+      },
+      "realistically_supported_error": {
+        "mae_all": 2123.34,
+        "mae_positive_only": 8132.98,
+        "rmse": 5239.91,
+        "r2": 0.9361,
+        "median_ae": 80.2,
+        "p90_ae": 6851.59
+      }
+    }
+  },
+  "certification_gates": {
+    "GATE_1_DATASET_INTEGRITY": "PASS",
+    "GATE_2_TARGET_VALIDITY": "PASS",
+    "GATE_3_NO_TARGET_LEAKAGE": "PASS",
+    "GATE_4_NO_FUTURE_LEAKAGE": "PASS",
+    "GATE_5_GROUP_SEPARATION": "PASS",
+    "GATE_6_BASELINE_IMPROVEMENT": "PASS",
+    "GATE_7_PRIMARY_METRIC_IMPROVEMENT": "PASS",
+    "GATE_8_TEMPORAL_ROBUSTNESS": "PASS",
+    "GATE_9_ERROR_ROBUSTNESS_ANALYSIS": "PASS",
+    "GATE_10_INFERENCE_COMPATIBILITY": "PASS",
+    "GATE_11_APPLICATION_REGRESSION": "PASS",
+    "GATE_12_REPRODUCIBILITY": "PASS"
+  },
+  "overall_certification_status": "NO MODEL CHANGE REQUIRED \u2014 EXISTING V2 REMAINS THE MOST DEFENSIBLE CERTIFIED MODEL FAMILY"
+}

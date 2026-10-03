@@ -31,7 +31,7 @@ def _load_model():
 def _feature_vector(features: Dict[str, Any]) -> np.ndarray:
     return np.array([[
         features.get("workload_ratio", 100),
-        features.get("estimated_hours", 40),
+        features.get("assigned_hours", features.get("estimated_hours", 40)),
         features.get("overtime_hours", 0),
         features.get("active_projects", 1),
         features.get("active_task_count", 0),

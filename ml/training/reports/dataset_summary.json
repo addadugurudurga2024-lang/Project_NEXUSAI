@@ -1,0 +1,161 @@
+{
+  "total_rows": 50000,
+  "total_columns": 90,
+  "entities": {
+    "unique_observations": 50000,
+    "unique_projects": 1000,
+    "unique_employees": 5000,
+    "unique_tasks": 50000,
+    "unique_sprints": 4000,
+    "unique_issues": 18542
+  },
+  "date_ranges": {
+    "observation_id": {
+      "min": "OBS000001",
+      "max": "OBS050000",
+      "sample": "OBS019472"
+    },
+    "snapshot_date": {
+      "min": "2024-01-10",
+      "max": "2025-12-07",
+      "sample": "2024-01-10"
+    },
+    "completed_date": {
+      "min": "2024-01-18",
+      "max": "NOT_COMPLETED",
+      "sample": "NOT_COMPLETED"
+    },
+    "created_at": {
+      "min": "2024-01-01",
+      "max": "2025-09-20",
+      "sample": "2024-01-20"
+    },
+    "created_date": {
+      "min": "2024-01-01",
+      "max": "2025-09-20",
+      "sample": "2024-01-20"
+    },
+    "due_date": {
+      "min": "2024-01-18",
+      "max": "2026-03-06",
+      "sample": "2024-02-18"
+    },
+    "end_date": {
+      "min": "2024-05-30",
+      "max": "2027-01-31",
+      "sample": "2025-04-14"
+    },
+    "estimated_hours": {
+      "min": "10.0",
+      "max": "9.99",
+      "sample": "50.21"
+    },
+    "resolved_at": {
+      "min": "2024-01-13",
+      "max": "2025-12-12",
+      "sample": "2024-01-13"
+    },
+    "satisfaction_level": {
+      "min": "10.0",
+      "max": "99.99",
+      "sample": "39.65"
+    },
+    "specialization": {
+      "min": "Backend",
+      "max": "QA",
+      "sample": "Frontend"
+    },
+    "start_date": {
+      "min": "2024-01-09",
+      "max": "2025-11-25",
+      "sample": "2024-01-10"
+    },
+    "status": {
+      "min": "active",
+      "max": "planning",
+      "sample": "active"
+    },
+    "workload_ratio": {
+      "min": "0.1868",
+      "max": "3.3",
+      "sample": "3.3"
+    },
+    "task_completion_rate": {
+      "min": "0.0",
+      "max": "1.0",
+      "sample": "0.42"
+    },
+    "budget_utilization": {
+      "min": "0.18",
+      "max": "1.08",
+      "sample": "1.003"
+    },
+    "completion_rate": {
+      "min": "0.0",
+      "max": "99.99",
+      "sample": "42.0"
+    },
+    "open_issues_ratio": {
+      "min": "0.0",
+      "max": "1.0",
+      "sample": "1.0"
+    },
+    "spending_rate_ratio": {
+      "min": "0.18",
+      "max": "1.08",
+      "sample": "1.003"
+    }
+  },
+  "targets": {
+    "risk_class_reference": {
+      "type": "categorical",
+      "distribution": {
+        "low": 22662,
+        "medium": 14944,
+        "high": 12394
+      },
+      "proportions": {
+        "low": 0.4532,
+        "medium": 0.2989,
+        "high": 0.2479
+      }
+    },
+    "burnout_risk_reference": {
+      "type": "categorical",
+      "distribution": {
+        "low": 22432,
+        "medium": 15037,
+        "high": 12531
+      },
+      "proportions": {
+        "low": 0.4486,
+        "medium": 0.3007,
+        "high": 0.2506
+      }
+    },
+    "deadline_delay_target_days": {
+      "type": "continuous",
+      "min": 0.5,
+      "max": 58.57,
+      "mean": 14.9606,
+      "std": 6.5559,
+      "median": 14.64,
+      "zero_count": 0,
+      "negative_count": 0
+    },
+    "budget_overrun_target": {
+      "type": "continuous",
+      "min": 0.0,
+      "max": 499647.25,
+      "mean": 10097.6279,
+      "std": 23922.4782,
+      "median": 0.0,
+      "zero_count": 34043,
+      "negative_count": 0
+    }
+  },
+  "split_column": {
+    "train": 40000,
+    "test": 10000
+  }
+}

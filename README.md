@@ -101,7 +101,26 @@ The NexusAI Decision Assistant provides grounded natural language decision intel
 
 ---
 
-## 7. Setup & Execution Instructions
+## 7. Enterprise Organization & Seeding
+
+NexusAI features a realistic, relational/entity-based Multi-PM Enterprise Organization data model in MongoDB (1 Admin, 12 PMs, 30 Projects, 185 Employees, 540 Tasks, 90 Sprints, 124 Issues, 51 Recommendations):
+
+### Deterministic Enterprise Seeder:
+```bash
+cd backend
+python seed_enterprise_org.py
+```
+
+### Test Accounts:
+- **Administrator:** `admin@nexusai.dev` (Password: `Password123!`) — Organization-wide visibility
+- **Project Manager 1 (Financial Services):** `sarah@nexusai.dev` (Password: `Password123!`) — Manages 3 Banking projects
+- **Project Manager 2 (Healthcare):** `marcus.vance@nexusai.dev` (Password: `Password123!`) — Manages 3 Healthcare projects
+- **Project Managers 3–12:** `elena.rostova@nexusai.dev`, `david.kim@nexusai.dev`, etc. (Password: `Password123!`)
+- **Team Member:** `member1@nexusai.com` (Password: `Password123!`) — Restricted to assigned tasks/projects
+
+---
+
+## 8. Setup & Execution Instructions
 
 ### Prerequisites
 - Python 3.11+
@@ -114,6 +133,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate  # (Windows) or source venv/bin/activate (Linux/Mac)
 pip install -r requirements.txt
+python seed_enterprise_org.py
 uvicorn main:app --port 8000 --reload
 ```
 API Documentation will be live at `http://localhost:8000/docs`.
@@ -128,17 +148,18 @@ Access the application at `http://localhost:5173` (or `http://localhost:5174`).
 
 ---
 
-## 8. Verification & Testing
+## 9. Verification & Testing
 
-The system includes automated audit and runtime test suites:
-- **Phase 8 Smoke Test:** `python smoke_test_phase8.py` (8/8 scenarios PASS)
-- **Technical Audit Suite:** `python audit_verification.py` (14/14 tasks PASS)
-- **Production Build:** `npm run build` (TypeScript compilation & bundle generation clean)
+The system includes comprehensive automated audit and runtime test suites:
+- **Enterprise Multi-PM Scoping & RBAC Audit:** `python test_enterprise_scoping_audit.py` (10/10 phases PASS)
+- **End-to-End Workflow Validation:** `python test_final_e2e_flow.py` (15/15 steps PASS)
+- **AI Decision Assistant & Grounding Smoke Test:** `python smoke_test_phase8.py` (8/8 scenarios PASS)
+- **Production Frontend Build:** `cd frontend && npm run build` (0 TypeScript / build errors)
 
 ---
 
-## 9. Known Limitations
+## 10. Notes & Data Governance
 
-1. **Synthetic Training Data:** The ML models are built upon synthetic development data; in enterprise deployment, retraining on real historical sprint/Jira logs is recommended.
-2. **Document OCR:** The Document AI pipeline extracts text natively from `.pdf`, `.docx`, `.txt`, `.csv`, and `.xlsx`. Scanned image-only PDFs require an external OCR engine (such as Tesseract).
-3. **Single Database Instance:** Configured for single-node MongoDB connection; cluster replica sets should use standard connection string parameters in `.env`.
+1. **Development-Stage Predictive Intelligence:** The ML models are evaluated against controlled application test data and serve as operational forecasting aids, not clinical or legally binding determinations.
+2. **Document OCR:** The Document AI pipeline extracts text natively from `.pdf`, `.docx`, `.txt`, `.csv`, and `.xlsx`. Scanned image-only PDFs require an external OCR engine.
+3. **Multi-PM Isolation:** All API endpoints strictly enforce PM project isolation at the backend level. Unauthorized cross-PM access returns HTTP 403.

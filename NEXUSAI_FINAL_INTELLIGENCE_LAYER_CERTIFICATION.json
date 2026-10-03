@@ -1,0 +1,79 @@
+{
+  "system": "NexusAI: Enterprise Project Decision Intelligence System",
+  "certification_type": "FINAL SYSTEM-WIDE INTELLIGENCE CERTIFICATION",
+  "certification_date": "2026-10-03",
+  "certifications": {
+    "ml_certification": "V2 ML CERTIFIED",
+    "decision_intelligence_certification": "DECISION INTELLIGENCE CERTIFIED",
+    "overall_system_status": "NEXUSAI INTELLIGENCE LAYER — CERTIFIED"
+  },
+  "ml_layer": {
+    "v1_immutability": "PASS (SHA256: 7479ac243e7fc3403c6799bc8679c96f48292f00dc9743c7680c8de66a4c2cf5)",
+    "v2_dataset_integrity": "PASS (50,000 rows, 90 columns, 0 nulls, 0 dups, SHA256: 2b48989a7c64a37e50a7f26212a2733ca3b62f5987d6c2b7558608aedd164859)",
+    "target_lineage": "PASS (Autoregressive momentum S_t = 0.7*S_{t-1} + 0.3*R_t + eps)",
+    "leakage_quarantine": "PASS (Max |r| = 0.3274 for PR, 0.4039 for DD, zero post-outcome exposure)",
+    "group_isolation": "PASS (Project Train/Val/Test intersection = 0 across 1,000 projects)",
+    "temporal_isolation": "PASS (Chronological cutoff: train < 2025-04-24, test >= 2025-07-15, N=7,811)",
+    "validation_only_selection": "PASS (Project Risk: XGBoost on Val F1=0.5493; Deadline Delay: Ridge on Val MAE=3.3005)",
+    "metrics_reproduced": {
+      "project_risk": {
+        "group_accuracy": "54.84%",
+        "group_macro_f1": "0.5318",
+        "exact_or_adjacent_agreement": "93.24%",
+        "temporal_accuracy": "55.49%"
+      },
+      "deadline_delay": {
+        "group_mae": "3.11 days",
+        "median_ae": "2.65 days",
+        "r2_score": "0.2496",
+        "temporal_mae": "3.27 days"
+      },
+      "burnout_risk": {
+        "group_accuracy": "88.75%",
+        "roc_auc": "0.9762"
+      },
+      "budget_overrun": {
+        "group_mae": "$3,005.43",
+        "median_ae": "$123.08",
+        "r2_score": "0.9194"
+      }
+    },
+    "production_model_status": {
+      "project_risk": "RandomForestClassifier (11 features, active production)",
+      "deadline_delay": "GradientBoostingRegressor (9 features, active production)",
+      "burnout_risk": "RandomForestClassifier (6 features, active production)",
+      "budget_overrun": "GradientBoostingRegressor (7 features, active production)",
+      "v2_benchmark_status": "Validated candidates (not yet auto-promoted to active production)"
+    }
+  },
+  "decision_intelligence_layer": {
+    "resource_allocation_pipeline": "PASS",
+    "capacity_mathematics": "PASS",
+    "workload_segregation": "PASS (Individual workload_ratio distinct from team_workload)",
+    "skill_matching": "PASS (Case-insensitive set intersection with specialization bonus)",
+    "optimization_objective": "PASS (Multi-factor heuristic scoring with 95% hard capacity cap)",
+    "recommendation_engine": "PASS (8/8 rules verified in code and live runtime)",
+    "risk_to_action_pipeline": "PASS (End-to-end Observe -> Predict -> Explain -> Recommend -> Optimize -> Decide verified)",
+    "rbac_security": "PASS (Admin/PM allowed, Team Member forbidden from optimization)",
+    "database_consistency": "PASS (Dual camelCase/snake_case schema support, clean transitions)",
+    "edge_cases_tested": "20/20 PASS",
+    "determinism_verified": "PASS (3x identical outputs)"
+  },
+  "regression_suites": {
+    "backend_audit_verification": "14/14 PASS",
+    "backend_smoke_test_phase8": "8/8 PASS",
+    "backend_test_final_e2e_flow": "15/15 PASS",
+    "backend_test_optimization_allocation_audit": "20/20 PASS",
+    "frontend_production_build": "PASS (0 errors, 18.1s)"
+  },
+  "discrepancies_corrected": [
+    {"id": "D1", "area": "V2 Leakage Report", "reported": "0.3498 (remaining_work)", "actual": "0.3274 (avg_sprint_velocity)", "status": "CORRECTED"},
+    {"id": "D2", "area": "Budget Median AE", "reported": "$129.92", "actual": "$123.08", "status": "CORRECTED"},
+    {"id": "D3", "area": "Budget MAE", "reported": "$3,009", "actual": "$3,005.43", "status": "CORRECTED"},
+    {"id": "D4", "area": "v2_controlled/ Archive", "reported": "Selected models", "actual": "Pre-benchmark candidate artifacts (RF/GBR)", "status": "DOCUMENTED_IN_README"}
+  ],
+  "freeze_status": {
+    "ml_pipeline": "FROZEN",
+    "decision_intelligence": "FROZEN"
+  }
+}

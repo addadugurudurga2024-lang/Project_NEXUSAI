@@ -85,6 +85,7 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                 {"_id": existing_emp["_id"]},
                 {"$set": {"user_id": user_id_str}},
             )
+            created_emp_id = str(existing_emp["_id"])
         else:
             employee_doc = {
                 "name": data.name,
@@ -101,7 +102,8 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                 "created_at": datetime.utcnow(),
             }
             try:
-                await db.employees.insert_one(employee_doc)
+                emp_res = await db.employees.insert_one(employee_doc)
+                created_emp_id = str(emp_res.inserted_id)
             except Exception as emp_err:
                 # Rollback: remove the user to avoid orphaned account
                 await db.users.delete_one({"_id": result.inserted_id})
@@ -109,6 +111,20 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Account creation failed: could not create employee profile. Please try again.",
                 )
+
+        # Create PM request if preferred_pm_id was passed
+        if getattr(data, "preferred_pm_id", None):
+            try:
+                from app.services.team_capacity_service import create_member_request
+                await create_member_request(
+                    db=db,
+                    pm_user_id=data.preferred_pm_id,
+                    candidate_user_id=user_id_str,
+                    employee_id=created_emp_id,
+                )
+            except Exception:
+                # Non-fatal during registration
+                pass
 
     token = create_access_token({"sub": user_id_str, "role": role_str})
     return {"access_token": token, "token_type": "bearer", "user": serialize_user(doc)}

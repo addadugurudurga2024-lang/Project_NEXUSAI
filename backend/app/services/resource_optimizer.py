@@ -49,31 +49,61 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
         "status": {"$nin": ["done"]},
     }).to_list(500)
 
-    # 2. Fetch all active employees
-    employees_raw = await db.employees.find({"status": "active"}).to_list(200)
+    # 2. Fetch all candidate employees (project team members + active candidates)
+    project_team_eids = [str(x) for x in project.get("team_member_ids", project.get("team_ids", []))]
+    team_obj_ids = [ObjectId(x) for x in project_team_eids if ObjectId.is_valid(x)]
+    employees_raw = await db.employees.find({
+        "$or": [
+            {"_id": {"$in": team_obj_ids}} if team_obj_ids else {"_id": None},
+            {"status": "active"}
+        ]
+    }).to_list(300)
+
+    emp_ids = [str(e["_id"]) for e in employees_raw]
+    emp_objs = [e["_id"] for e in employees_raw]
+
+    # Batch task aggregation for real global load across all projects
+    task_load_agg = await db.tasks.aggregate([
+        {"$match": {
+            "$or": [
+                {"assignee_id": {"$in": emp_ids + emp_objs}},
+                {"assigned_to": {"$in": emp_ids + emp_objs}},
+            ],
+            "status": {"$nin": ["done"]}
+        }},
+        {"$group": {
+            "_id": "$assignee_id",
+            "assigned_hours": {"$sum": {"$ifNull": ["$estimated_hours", 0]}},
+        }}
+    ]).to_list(len(emp_ids) + 50)
+    emp_hours_map = {str(item["_id"]): float(item["assigned_hours"]) for item in task_load_agg}
+
+    # Batch burnout predictions
+    burnout_preds = await db.employee_risk_predictions.find({
+        "employee_id": {"$in": emp_ids}
+    }).to_list(len(emp_ids) + 50)
+    burnout_map = {str(b.get("employee_id")): b for b in burnout_preds}
 
     # 3. Calculate global workload across all projects for each employee
     employee_map = {}
+    valid_pid_strs = {project_id, str(valid_pid_objs[0]) if valid_pid_objs else ""}
+    project_tasks_by_emp = {}
+    for t in tasks:
+        aid = str(t.get("assignee_id", "") or t.get("assigned_to", ""))
+        project_tasks_by_emp.setdefault(aid, []).append(t)
+
     for emp in employees_raw:
         emp_id = str(emp["_id"])
-        # Find all active tasks assigned across all projects to measure total real load
-        all_emp_tasks = await db.tasks.find({
-            "$or": [
-                {"assignee_id": emp_id},
-                {"assignee_id": ObjectId(emp_id) if ObjectId.is_valid(emp_id) else emp_id},
-                {"assigned_to": emp_id},
-            ],
-            "status": {"$nin": ["done"]},
-        }).to_list(500)
-
-        assigned_hours = sum(float(t.get("estimated_hours", 0) or 0) for t in all_emp_tasks)
+        assigned_hours = emp_hours_map.get(emp_id, 0.0)
         capacity = float(emp.get("weekly_capacity_hours", 40) or 40)
         workload_ratio = (assigned_hours / capacity * 100) if capacity > 0 else 0
         available_hours = max(0.0, capacity - assigned_hours)
 
         # Check burnout risk prediction
-        burnout_pred = await db.employee_risk_predictions.find_one({"employee_id": emp_id})
+        burnout_pred = burnout_map.get(emp_id)
         burnout_risk = burnout_pred.get("risk_level", "LOW") if burnout_pred else ("HIGH" if workload_ratio > 110 else "LOW")
+
+        emp_proj_tasks = project_tasks_by_emp.get(emp_id, [])
 
         employee_map[emp_id] = {
             "employee_id": emp_id,
@@ -98,7 +128,7 @@ async def compute_resource_optimization(project_id: str, db) -> Dict[str, Any]:
                     "priority": t.get("priority", "medium"),
                     "project_id": str(t.get("project_id")),
                 }
-                for t in all_emp_tasks if str(t.get("project_id")) in (project_id, str(valid_pid_objs[0]) if valid_pid_objs else "")
+                for t in emp_proj_tasks
             ]
         }
 

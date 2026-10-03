@@ -35,12 +35,25 @@ async def list_sprints(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
     query = {}
-    if project_id:
-        query["project_id"] = project_id
     if status:
         query["status"] = status
-    sprints = await db.sprints.find(query).sort("created_at", -1).to_list(200)
+
+    if role == "admin":
+        if project_id:
+            query["project_id"] = project_id
+    elif role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id:
+            if project_id not in authorized_pids:
+                return []
+            query["project_id"] = project_id
+        else:
+            query["project_id"] = {"$in": authorized_pids}
+
+    sprints = await db.sprints.find(query).sort("created_at", -1).to_list(500)
     result = []
     for s in sprints:
         task_count = await db.tasks.count_documents({"sprint_id": str(s["_id"])})
@@ -55,6 +68,15 @@ async def create_sprint(
     db=Depends(get_database),
 ):
     doc = data.model_dump()
+    project_id = str(doc.get("project_id", ""))
+    role = current_user.get("role", "team_member")
+
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot create sprints in another PM's project")
+
     doc["completed_story_points"] = 0
     doc["velocity"] = 0.0
     doc["created_at"] = datetime.utcnow()
@@ -75,6 +97,16 @@ async def get_sprint(
         raise HTTPException(status_code=400, detail="Invalid sprint ID")
     if not s:
         raise HTTPException(status_code=404, detail="Sprint not found")
+
+    role = current_user.get("role", "team_member")
+    project_id = str(s.get("project_id", ""))
+
+    if role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Sprint belongs to unauthorized project")
+
     task_count = await db.tasks.count_documents({"sprint_id": sprint_id})
     return serialize_sprint(s, task_count)
 
@@ -92,6 +124,15 @@ async def update_sprint(
         raise HTTPException(status_code=400, detail="Invalid sprint ID")
     if not s:
         raise HTTPException(status_code=404, detail="Sprint not found")
+
+    role = current_user.get("role", "team_member")
+    project_id = str(s.get("project_id", ""))
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: Cannot update another PM's sprint")
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     await db.sprints.update_one({"_id": ObjectId(sprint_id)}, {"$set": update_data})
     updated = await db.sprints.find_one({"_id": ObjectId(sprint_id)})

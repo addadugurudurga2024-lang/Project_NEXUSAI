@@ -20,6 +20,7 @@ class UserCreate(BaseModel):
     job_role: Optional[str] = None
     skills: List[str] = []
     weekly_capacity_hours: float = 40.0
+    preferred_pm_id: Optional[str] = None
 
 
 class UserUpdate(BaseModel):

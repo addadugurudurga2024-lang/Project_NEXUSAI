@@ -1,0 +1,247 @@
+{
+  "project_risk": {
+    "name": "Project Risk",
+    "type": "classification",
+    "feature_count": 11,
+    "features": [
+      "progress",
+      "task_completion_rate",
+      "overdue_tasks",
+      "avg_sprint_velocity",
+      "total_bugs",
+      "critical_issues",
+      "team_workload",
+      "budget_utilization",
+      "remaining_work",
+      "high_priority_tasks",
+      "total_tasks"
+    ],
+    "baseline": {
+      "accuracy": 0.4554,
+      "macro_f1": 0.2086
+    },
+    "v1_test": {
+      "accuracy": 0.2448,
+      "macro_f1": 0.1323
+    },
+    "v2_group_test": {
+      "accuracy": 0.4936,
+      "macro_f1": 0.4925,
+      "weighted_f1": 0.5035,
+      "macro_recall": 0.4958,
+      "macro_precision": 0.5039,
+      "roc_auc": 0.6856,
+      "confusion_matrix": [
+        [
+          1135,
+          909,
+          233
+        ],
+        [
+          402,
+          670,
+          430
+        ],
+        [
+          143,
+          415,
+          663
+        ]
+      ]
+    },
+    "v2_temporal_test": {
+      "accuracy": 0.5513,
+      "macro_f1": 0.5522,
+      "weighted_f1": 0.5601,
+      "roc_auc": 0.7557,
+      "accuracy_delta": 0.0577,
+      "macro_f1_delta": 0.0597
+    },
+    "gates": {
+      "LEAKAGE_FREE": "PASS",
+      "GROUP_SEPARATION": "PASS",
+      "BASELINE_IMPROVEMENT": "PASS",
+      "PRIMARY_METRIC": "PASS",
+      "TEMPORAL_ROBUSTNESS": "PASS",
+      "INFERENCE_COMPATIBILITY": "PASS",
+      "REGRESSION_TESTS": "PASS",
+      "FINAL_CERTIFICATION": "PASS",
+      "PROMOTION_DECISION": "PROMOTE"
+    }
+  },
+  "burnout_risk": {
+    "name": "Employee Burnout Risk",
+    "type": "classification",
+    "feature_count": 9,
+    "features": [
+      "workload_ratio",
+      "assigned_hours",
+      "overtime_hours",
+      "active_projects",
+      "active_task_count",
+      "overdue_task_count",
+      "sprint_story_points",
+      "completion_rate",
+      "high_priority_task_count"
+    ],
+    "baseline": {
+      "accuracy": 0.454,
+      "macro_f1": 0.2082
+    },
+    "v1_test": {
+      "accuracy": 0.4275,
+      "macro_f1": 0.4278
+    },
+    "v2_group_test": {
+      "accuracy": 0.8875,
+      "macro_f1": 0.8734,
+      "weighted_f1": 0.8885,
+      "macro_recall": 0.874,
+      "macro_precision": 0.8737,
+      "roc_auc": 0.9762,
+      "confusion_matrix": [
+        [
+          2165,
+          119,
+          0
+        ],
+        [
+          61,
+          1220,
+          171
+        ],
+        [
+          0,
+          215,
+          1080
+        ]
+      ]
+    },
+    "v2_temporal_test": {
+      "accuracy": 0.898,
+      "macro_f1": 0.8871,
+      "weighted_f1": 0.8988,
+      "roc_auc": 0.9807,
+      "accuracy_delta": 0.0105,
+      "macro_f1_delta": 0.0138
+    },
+    "gates": {
+      "LEAKAGE_FREE": "PASS",
+      "GROUP_SEPARATION": "PASS",
+      "BASELINE_IMPROVEMENT": "PASS",
+      "PRIMARY_METRIC": "PASS",
+      "TEMPORAL_ROBUSTNESS": "PASS",
+      "INFERENCE_COMPATIBILITY": "PASS",
+      "REGRESSION_TESTS": "PASS",
+      "FINAL_CERTIFICATION": "PASS",
+      "PROMOTION_DECISION": "PROMOTE"
+    }
+  },
+  "deadline_delay": {
+    "name": "Deadline Delay",
+    "type": "regression",
+    "feature_count": 9,
+    "features": [
+      "progress",
+      "task_completion_rate",
+      "overdue_tasks",
+      "critical_issues",
+      "team_workload",
+      "total_days",
+      "days_remaining",
+      "schedule_progress",
+      "progress_gap"
+    ],
+    "baseline": {
+      "mae": 5.21,
+      "rmse": 6.62,
+      "r2": -0.0012
+    },
+    "v1_test": {
+      "mae": 6.75,
+      "rmse": 8.57,
+      "r2": -0.6766,
+      "medae": 5.67
+    },
+    "v2_group_test": {
+      "mae": 4.64,
+      "rmse": 5.78,
+      "r2": 0.2364,
+      "medae": 3.93,
+      "zero_target_pct": 0.0
+    },
+    "v2_temporal_test": {
+      "mae": 4.5,
+      "rmse": 5.58,
+      "r2": 0.2949,
+      "medae": 3.87,
+      "zero_target_pct": 0.0,
+      "mae_delta": -0.13,
+      "r2_delta": 0.0585
+    },
+    "gates": {
+      "LEAKAGE_FREE": "PASS",
+      "GROUP_SEPARATION": "PASS",
+      "BASELINE_IMPROVEMENT": "PASS",
+      "PRIMARY_METRIC": "PASS",
+      "TEMPORAL_ROBUSTNESS": "PASS",
+      "INFERENCE_COMPATIBILITY": "PASS",
+      "REGRESSION_TESTS": "PASS",
+      "FINAL_CERTIFICATION": "PASS",
+      "PROMOTION_DECISION": "PROMOTE"
+    }
+  },
+  "budget_overrun": {
+    "name": "Budget Overrun",
+    "type": "regression",
+    "feature_count": 8,
+    "features": [
+      "budget_utilization",
+      "progress",
+      "spending_rate_k",
+      "remaining_work",
+      "overdue_tasks",
+      "critical_issues",
+      "team_workload",
+      "days_remaining_pct"
+    ],
+    "baseline": {
+      "mae": 15979.97,
+      "rmse": 30779.68,
+      "r2": -0.0038
+    },
+    "v1_test": {
+      "mae": 22799.91,
+      "rmse": 115632.57,
+      "r2": -13.1676,
+      "medae": 0.0
+    },
+    "v2_group_test": {
+      "mae": 3009.19,
+      "rmse": 8720.3,
+      "r2": 0.9194,
+      "medae": 129.92,
+      "zero_target_pct": 67.24
+    },
+    "v2_temporal_test": {
+      "mae": 2126.14,
+      "rmse": 5234.4,
+      "r2": 0.9362,
+      "medae": 77.76,
+      "zero_target_pct": 68.69,
+      "mae_delta": -883.05,
+      "r2_delta": 0.0168
+    },
+    "gates": {
+      "LEAKAGE_FREE": "PASS",
+      "GROUP_SEPARATION": "PASS",
+      "BASELINE_IMPROVEMENT": "PASS",
+      "PRIMARY_METRIC": "PASS",
+      "TEMPORAL_ROBUSTNESS": "PASS",
+      "INFERENCE_COMPATIBILITY": "PASS",
+      "REGRESSION_TESTS": "PASS",
+      "FINAL_CERTIFICATION": "PASS",
+      "PROMOTION_DECISION": "PROMOTE"
+    }
+  }
+}

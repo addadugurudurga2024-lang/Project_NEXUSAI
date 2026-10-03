@@ -1,0 +1,26 @@
+{
+  "random_state": 42,
+  "project_group_split": {
+    "num_projects_train": 800,
+    "num_projects_val": 100,
+    "num_projects_test": 100,
+    "rows_train": 40000,
+    "rows_val": 5000,
+    "rows_test": 5000
+  },
+  "employee_group_split": {
+    "num_employees_train": 4000,
+    "num_employees_val": 500,
+    "num_employees_test": 500,
+    "rows_train": 40068,
+    "rows_val": 4901,
+    "rows_test": 5031
+  },
+  "temporal_split": {
+    "val_cutoff": "2025-04-24 00:00:00",
+    "test_cutoff": "2025-07-15 00:00:00",
+    "rows_train": 35070,
+    "rows_val": 7119,
+    "rows_test": 7811
+  }
+}

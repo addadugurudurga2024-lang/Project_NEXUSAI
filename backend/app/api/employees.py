@@ -18,12 +18,12 @@ def serialize_employee(e: dict) -> dict:
         "role": e.get("role", ""),
         "specialization": e.get("specialization"),
         "skills": e.get("skills", []),
-        "experience_years": e.get("experience_years", 0.0),
-        "weekly_capacity_hours": e.get("weekly_capacity_hours", 40.0),
-        "availability_percentage": e.get("availability_percentage", 100.0),
+        "experience_years": float(e.get("experience_years", 0.0)),
+        "weekly_capacity_hours": float(e.get("weekly_capacity_hours", 40.0)),
+        "availability_percentage": float(e.get("availability_percentage", 100.0)),
         "status": e.get("status", "active"),
-        "user_id": e.get("user_id"),
-        "assigned_project_ids": e.get("assigned_project_ids", []),
+        "user_id": str(e["user_id"]) if e.get("user_id") else None,
+        "assigned_project_ids": [str(x) for x in e.get("assigned_project_ids", [])],
         "created_at": e.get("created_at"),
     }
 
@@ -34,10 +34,20 @@ async def list_employees(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
     query = {}
     if status:
         query["status"] = status
-    employees = await db.employees.find(query).sort("name", 1).to_list(200)
+
+    if role == "admin":
+        pass
+    elif role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, current_user)
+        valid_objs = [ObjectId(x) for x in authorized_eids if ObjectId.is_valid(x)]
+        query["_id"] = {"$in": valid_objs} if valid_objs else {"_id": None}
+
+    employees = await db.employees.find(query).sort("name", 1).to_list(500)
     return [serialize_employee(e) for e in employees]
 
 
@@ -70,6 +80,14 @@ async def get_employee(
         raise HTTPException(status_code=400, detail="Invalid employee ID")
     if not e:
         raise HTTPException(status_code=404, detail="Employee not found")
+
+    role = current_user.get("role", "team_member")
+    if role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, current_user)
+        if employee_id not in authorized_eids:
+            raise HTTPException(status_code=403, detail="Access denied: Employee not in your authorized scope")
+
     return serialize_employee(e)
 
 

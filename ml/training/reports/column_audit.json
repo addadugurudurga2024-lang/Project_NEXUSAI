@@ -1,0 +1,722 @@
+[
+  {
+    "column": "observation_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 50000,
+    "sample": "OBS019472"
+  },
+  {
+    "column": "snapshot_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 698,
+    "sample": "2024-01-10"
+  },
+  {
+    "column": "split",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 2,
+    "sample": "train"
+  },
+  {
+    "column": "actual_hours",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 6347,
+    "sample": "32.99"
+  },
+  {
+    "column": "assigned_hours",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 6638,
+    "sample": "70.75"
+  },
+  {
+    "column": "assigned_to",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5000,
+    "sample": "E02973"
+  },
+  {
+    "column": "availability",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7573,
+    "sample": "40.66"
+  },
+  {
+    "column": "budget",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1000,
+    "sample": "170103.41"
+  },
+  {
+    "column": "burnout_risk_reference",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3,
+    "sample": "high"
+  },
+  {
+    "column": "change_request_frequency",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7,
+    "sample": "5"
+  },
+  {
+    "column": "completed_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 647,
+    "sample": "NOT_COMPLETED"
+  },
+  {
+    "column": "completed_tasks",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 51,
+    "sample": "21"
+  },
+  {
+    "column": "completion_percentage",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8972,
+    "sample": "42.0"
+  },
+  {
+    "column": "complexity_score",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 556,
+    "sample": "2.89"
+  },
+  {
+    "column": "created_at",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 629,
+    "sample": "2024-01-20"
+  },
+  {
+    "column": "created_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 629,
+    "sample": "2024-01-20"
+  },
+  {
+    "column": "description",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1000,
+    "sample": "Synthetic NexusAI snapshot for Cybersecurity Initiative 0472 supporting project delivery, resource, risk and financial intelligence."
+  },
+  {
+    "column": "due_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 760,
+    "sample": "2024-02-18"
+  },
+  {
+    "column": "employee_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5000,
+    "sample": "E02973"
+  },
+  {
+    "column": "employee_name",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 260,
+    "sample": "Ishita Sharma 8"
+  },
+  {
+    "column": "end_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 568,
+    "sample": "2025-04-14"
+  },
+  {
+    "column": "entity_type",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "project_snapshot"
+  },
+  {
+    "column": "estimated_hours",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5791,
+    "sample": "50.21"
+  },
+  {
+    "column": "experience_years",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1404,
+    "sample": "4.48"
+  },
+  {
+    "column": "external_dependencies",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7,
+    "sample": "0"
+  },
+  {
+    "column": "goal",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1000,
+    "sample": "Deliver measurable progress for Cybersecurity Initiative 0472 within schedule and budget constraints."
+  },
+  {
+    "column": "is_blocked",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 2,
+    "sample": "0"
+  },
+  {
+    "column": "is_blocking",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 2,
+    "sample": "0"
+  },
+  {
+    "column": "is_overdue",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "0"
+  },
+  {
+    "column": "issue_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 18543,
+    "sample": "NO_ISSUE"
+  },
+  {
+    "column": "job_role",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "Backend Engineer"
+  },
+  {
+    "column": "priority",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4,
+    "sample": "low"
+  },
+  {
+    "column": "progress",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8705,
+    "sample": "38.3"
+  },
+  {
+    "column": "project_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1000,
+    "sample": "P0472"
+  },
+  {
+    "column": "project_name",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1000,
+    "sample": "Cybersecurity Initiative 0472"
+  },
+  {
+    "column": "project_type",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 11,
+    "sample": "Cybersecurity"
+  },
+  {
+    "column": "required_skills",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7414,
+    "sample": "Data Engineering"
+  },
+  {
+    "column": "resolved_at",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 679,
+    "sample": "NOT_RESOLVED"
+  },
+  {
+    "column": "resource_availability",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7573,
+    "sample": "40.66"
+  },
+  {
+    "column": "risk_class_reference",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3,
+    "sample": "high"
+  },
+  {
+    "column": "satisfaction_level",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8349,
+    "sample": "39.65"
+  },
+  {
+    "column": "scenario",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 6,
+    "sample": "normal_delivery"
+  },
+  {
+    "column": "severity",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4,
+    "sample": "low"
+  },
+  {
+    "column": "skills",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4017,
+    "sample": "Node.js;Data Engineering;Spring Boot;AWS"
+  },
+  {
+    "column": "specialization",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 10,
+    "sample": "Frontend"
+  },
+  {
+    "column": "spent_amount",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 49944,
+    "sample": "170617.84"
+  },
+  {
+    "column": "sprint_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4000,
+    "sample": "S00472"
+  },
+  {
+    "column": "sprint_name",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4000,
+    "sample": "Sprint 00472"
+  },
+  {
+    "column": "start_date",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 669,
+    "sample": "2024-01-10"
+  },
+  {
+    "column": "status",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 4,
+    "sample": "active"
+  },
+  {
+    "column": "stress_level",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 7542,
+    "sample": "100.0"
+  },
+  {
+    "column": "task_count",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "1"
+  },
+  {
+    "column": "task_id",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 50000,
+    "sample": "T019472"
+  },
+  {
+    "column": "task_name",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 50000,
+    "sample": "Testing Task 019472"
+  },
+  {
+    "column": "team_size",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 12,
+    "sample": "5"
+  },
+  {
+    "column": "technical_debt",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 933,
+    "sample": "53.12"
+  },
+  {
+    "column": "title",
+    "dtype": "object",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 50000,
+    "sample": "Testing Task 019472"
+  },
+  {
+    "column": "velocity",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5721,
+    "sample": "56.6"
+  },
+  {
+    "column": "weekly_capacity_hours",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3,
+    "sample": "40"
+  },
+  {
+    "column": "work_hours_per_week",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 14,
+    "sample": "36"
+  },
+  {
+    "column": "workload_ratio",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 18229,
+    "sample": "3.3"
+  },
+  {
+    "column": "task_completion_rate",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8972,
+    "sample": "0.42"
+  },
+  {
+    "column": "overdue_tasks",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 9,
+    "sample": "1"
+  },
+  {
+    "column": "avg_sprint_velocity",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3267,
+    "sample": "47.56"
+  },
+  {
+    "column": "total_bugs",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 14,
+    "sample": "1"
+  },
+  {
+    "column": "critical_issues",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 2,
+    "sample": "0"
+  },
+  {
+    "column": "team_workload",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 19841,
+    "sample": "330.0"
+  },
+  {
+    "column": "budget_utilization",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8965,
+    "sample": "1.003"
+  },
+  {
+    "column": "remaining_work",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8705,
+    "sample": "61.7"
+  },
+  {
+    "column": "high_priority_tasks",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 22,
+    "sample": "12"
+  },
+  {
+    "column": "total_tasks",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "50"
+  },
+  {
+    "column": "overtime_hours",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3764,
+    "sample": "35.47"
+  },
+  {
+    "column": "active_projects",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 1,
+    "sample": "1"
+  },
+  {
+    "column": "active_task_count",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 51,
+    "sample": "29"
+  },
+  {
+    "column": "overdue_task_count",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 9,
+    "sample": "1"
+  },
+  {
+    "column": "sprint_story_points",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 60,
+    "sample": "55"
+  },
+  {
+    "column": "completion_rate",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8972,
+    "sample": "42.0"
+  },
+  {
+    "column": "high_priority_task_count",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 22,
+    "sample": "12"
+  },
+  {
+    "column": "schedule_progress_pct",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5595,
+    "sample": "1.92"
+  },
+  {
+    "column": "progress_gap",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 11693,
+    "sample": "-36.38"
+  },
+  {
+    "column": "velocity_deficit",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 5771,
+    "sample": "0.0"
+  },
+  {
+    "column": "open_issues_ratio",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 49,
+    "sample": "1.0"
+  },
+  {
+    "column": "days_remaining",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 525,
+    "sample": "460"
+  },
+  {
+    "column": "current_expenditure",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 49944,
+    "sample": "170617.84"
+  },
+  {
+    "column": "spending_rate_ratio",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 8965,
+    "sample": "1.003"
+  },
+  {
+    "column": "open_issues",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 12,
+    "sample": "1"
+  },
+  {
+    "column": "total_issues",
+    "dtype": "int64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 16,
+    "sample": "1"
+  },
+  {
+    "column": "deadline_delay_target_days",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3437,
+    "sample": "22.8"
+  },
+  {
+    "column": "budget_overrun_target",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 15936,
+    "sample": "32913.18"
+  },
+  {
+    "column": "budget_overrun_target_pct",
+    "dtype": "float64",
+    "null_count": 0,
+    "null_pct": 0.0,
+    "nunique": 3347,
+    "sample": "19.35"
+  }
+]

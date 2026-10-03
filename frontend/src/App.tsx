@@ -17,6 +17,7 @@ import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
 import Analytics from './pages/Analytics';
 import AIAssistant from './pages/AIAssistant';
+import TeamCapacity from './pages/TeamCapacity';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -61,6 +62,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="projects" element={<Projects />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="team-capacity" element={<TeamCapacity />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="issues" element={<Issues />} />
             <Route path="documents" element={<DocumentAI />} />

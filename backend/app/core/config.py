@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     upload_dir: str = "../uploads"
     max_upload_size_mb: int = 25
     seed_admin_password: Optional[str] = ""
+    pm_team_capacity: int = 18
 
     class Config:
         env_file = ".env"

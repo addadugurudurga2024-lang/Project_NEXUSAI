@@ -1,0 +1,442 @@
+{
+  "actual_hours": {
+    "min": 1.67,
+    "max": 136.73,
+    "mean": 22.2715,
+    "median": 18.8,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "assigned_hours": {
+    "min": 3.06,
+    "max": 115.57,
+    "mean": 27.7857,
+    "median": 24.58,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "availability": {
+    "min": 10.62,
+    "max": 100.0,
+    "mean": 67.5779,
+    "median": 67.86,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "budget": {
+    "min": 24302.08,
+    "max": 1463172.88,
+    "mean": 215666.9035,
+    "median": 172502.555,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "change_request_frequency": {
+    "min": 0.0,
+    "max": 6.0,
+    "mean": 2.9971,
+    "median": 3.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "completed_tasks": {
+    "min": 0.0,
+    "max": 50.0,
+    "mean": 31.9565,
+    "median": 32.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "completion_percentage": {
+    "min": 0.0,
+    "max": 100.0,
+    "mean": 63.911,
+    "median": 64.89,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "complexity_score": {
+    "min": 2.01,
+    "max": 10.0,
+    "mean": 5.8391,
+    "median": 5.7,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "estimated_hours": {
+    "min": 4.0,
+    "max": 80.0,
+    "mean": 26.4881,
+    "median": 23.97,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "experience_years": {
+    "min": 0.5,
+    "max": 14.98,
+    "mean": 7.8139,
+    "median": 7.77,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "external_dependencies": {
+    "min": 0.0,
+    "max": 6.0,
+    "mean": 2.96,
+    "median": 3.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "is_blocked": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.0785,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "is_blocking": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.0514,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "is_overdue": {
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "progress": {
+    "min": 2.0,
+    "max": 99.0,
+    "mean": 63.982,
+    "median": 64.92,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "resource_availability": {
+    "min": 10.62,
+    "max": 100.0,
+    "mean": 67.5779,
+    "median": 67.86,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "satisfaction_level": {
+    "min": 10.0,
+    "max": 100.0,
+    "mean": 46.6659,
+    "median": 46.625,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "spent_amount": {
+    "min": 4771.57,
+    "max": 1563567.1,
+    "mean": 136478.6119,
+    "median": 100952.505,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "stress_level": {
+    "min": 5.0,
+    "max": 100.0,
+    "mean": 85.4656,
+    "median": 100.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "task_count": {
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "median": 1.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "team_size": {
+    "min": 4.0,
+    "max": 15.0,
+    "mean": 9.418,
+    "median": 9.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "technical_debt": {
+    "min": 5.14,
+    "max": 79.99,
+    "mean": 43.0644,
+    "median": 43.095,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "velocity": {
+    "min": 5.0,
+    "max": 88.44,
+    "mean": 39.8427,
+    "median": 39.9,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "weekly_capacity_hours": {
+    "min": 40.0,
+    "max": 50.0,
+    "mean": 43.0018,
+    "median": 40.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "work_hours_per_week": {
+    "min": 32.0,
+    "max": 45.0,
+    "mean": 38.4854,
+    "median": 38.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "workload_ratio": {
+    "min": 0.1868,
+    "max": 3.3,
+    "mean": 2.5156,
+    "median": 2.7511,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "task_completion_rate": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.6391,
+    "median": 0.6489,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "overdue_tasks": {
+    "min": 1.0,
+    "max": 9.0,
+    "mean": 1.0995,
+    "median": 1.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "avg_sprint_velocity": {
+    "min": 18.54,
+    "max": 63.95,
+    "mean": 39.8411,
+    "median": 39.85,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "total_bugs": {
+    "min": 0.0,
+    "max": 13.0,
+    "mean": 2.9987,
+    "median": 3.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "critical_issues": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.0083,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "team_workload": {
+    "min": 15.67,
+    "max": 330.0,
+    "mean": 242.8259,
+    "median": 260.985,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "budget_utilization": {
+    "min": 0.18,
+    "max": 1.08,
+    "mean": 0.6318,
+    "median": 0.6309,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "remaining_work": {
+    "min": 1.0,
+    "max": 98.0,
+    "mean": 36.018,
+    "median": 35.08,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "high_priority_tasks": {
+    "min": 0.0,
+    "max": 21.0,
+    "mean": 9.0101,
+    "median": 9.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "total_tasks": {
+    "min": 50.0,
+    "max": 50.0,
+    "mean": 50.0,
+    "median": 50.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "overtime_hours": {
+    "min": 0.0,
+    "max": 80.89,
+    "mean": 7.7109,
+    "median": 5.3,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "active_projects": {
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "median": 1.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "active_task_count": {
+    "min": 0.0,
+    "max": 50.0,
+    "mean": 18.0435,
+    "median": 18.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "overdue_task_count": {
+    "min": 1.0,
+    "max": 9.0,
+    "mean": 1.0995,
+    "median": 1.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "sprint_story_points": {
+    "min": 20.0,
+    "max": 79.0,
+    "mean": 49.7131,
+    "median": 50.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "completion_rate": {
+    "min": 0.0,
+    "max": 100.0,
+    "mean": 63.911,
+    "median": 64.89,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "high_priority_task_count": {
+    "min": 0.0,
+    "max": 21.0,
+    "mean": 9.0101,
+    "median": 9.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "schedule_progress_pct": {
+    "min": 0.0,
+    "max": 91.74,
+    "mean": 20.2687,
+    "median": 17.04,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "progress_gap": {
+    "min": -98.79,
+    "max": 83.12,
+    "mean": -43.7134,
+    "median": -45.53,
+    "negatives": 46611,
+    "nulls": 0
+  },
+  "velocity_deficit": {
+    "min": 0.0,
+    "max": 0.8827,
+    "mean": 0.1024,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "open_issues_ratio": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.4954,
+    "median": 0.5,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "days_remaining": {
+    "min": 10.0,
+    "max": 536.0,
+    "mean": 273.6442,
+    "median": 275.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "current_expenditure": {
+    "min": 4771.57,
+    "max": 1563567.1,
+    "mean": 136478.6119,
+    "median": 100952.505,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "spending_rate_ratio": {
+    "min": 0.18,
+    "max": 1.08,
+    "mean": 0.6318,
+    "median": 0.6309,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "open_issues": {
+    "min": 0.0,
+    "max": 11.0,
+    "mean": 2.415,
+    "median": 2.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "total_issues": {
+    "min": 0.0,
+    "max": 15.0,
+    "mean": 4.8338,
+    "median": 5.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "deadline_delay_target_days": {
+    "min": 0.5,
+    "max": 58.57,
+    "mean": 14.9606,
+    "median": 14.64,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "budget_overrun_target": {
+    "min": 0.0,
+    "max": 499647.25,
+    "mean": 10097.6279,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  },
+  "budget_overrun_target_pct": {
+    "min": 0.0,
+    "max": 41.05,
+    "mean": 4.6368,
+    "median": 0.0,
+    "negatives": 0,
+    "nulls": 0
+  }
+}

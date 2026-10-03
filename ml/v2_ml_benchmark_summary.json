@@ -1,0 +1,528 @@
+{
+  "timestamp": "2026-10-03 06:02:34 UTC",
+  "v1_dataset": {
+    "path": "d:\\NexsusAI\\data\\NexusAI_50K_Final_Integrated_Synthetic_Dataset.csv",
+    "sha256": "7479ac243e7fc3403c6799bc8679c96f48292f00dc9743c7680c8de66a4c2cf5",
+    "frozen": true,
+    "dataset_changed": false
+  },
+  "v2_dataset": {
+    "path": "d:\\NexsusAI\\data\\NexusAI_50K_Controlled_V2_Synthetic_Dataset.csv",
+    "sha256": "2b48989a7c64a37e50a7f26212a2733ca3b62f5987d6c2b7558608aedd164859",
+    "rows": 50000,
+    "columns": 90,
+    "leakage_audit": "PASS"
+  },
+  "project_risk": {
+    "features": [
+      "progress",
+      "task_completion_rate",
+      "overdue_tasks",
+      "avg_sprint_velocity",
+      "total_bugs",
+      "critical_issues",
+      "team_workload",
+      "budget_utilization",
+      "remaining_work",
+      "high_priority_tasks",
+      "total_tasks"
+    ],
+    "validation_benchmark": {
+      "LogisticRegression": {
+        "accuracy": 0.5566,
+        "macro_precision": 0.5386,
+        "macro_recall": 0.5563,
+        "macro_f1": 0.5437,
+        "weighted_f1": 0.5514,
+        "balanced_accuracy": 0.5563,
+        "per_class": {
+          "low": {
+            "precision": 0.6761,
+            "recall": 0.6671,
+            "f1": 0.6716
+          },
+          "medium": {
+            "precision": 0.4246,
+            "recall": 0.3521,
+            "f1": 0.385
+          },
+          "high": {
+            "precision": 0.5151,
+            "recall": 0.6496,
+            "f1": 0.5746
+          }
+        },
+        "high_risk_recall": 0.6496,
+        "high_risk_precision": 0.5151,
+        "high_risk_f1": 0.5746,
+        "confusion_matrix": [
+          [
+            1403,
+            516,
+            184
+          ],
+          [
+            537,
+            594,
+            556
+          ],
+          [
+            135,
+            289,
+            786
+          ]
+        ],
+        "ordinal_analysis": {
+          "exact_match_pct": 55.66,
+          "adjacent_error_pct": 37.96,
+          "extreme_error_pct": 6.38,
+          "exact_or_adjacent_pct": 93.62,
+          "ordinal_mae": 0.5072
+        },
+        "roc_auc": 0.7435,
+        "fit_time_sec": 0.17
+      },
+      "RandomForest": {
+        "accuracy": 0.5562,
+        "macro_precision": 0.5379,
+        "macro_recall": 0.5488,
+        "macro_f1": 0.5418,
+        "weighted_f1": 0.5521,
+        "balanced_accuracy": 0.5488,
+        "per_class": {
+          "low": {
+            "precision": 0.667,
+            "recall": 0.6847,
+            "f1": 0.6757
+          },
+          "medium": {
+            "precision": 0.4289,
+            "recall": 0.3717,
+            "f1": 0.3982
+          },
+          "high": {
+            "precision": 0.5178,
+            "recall": 0.5901,
+            "f1": 0.5516
+          }
+        },
+        "high_risk_recall": 0.5901,
+        "high_risk_precision": 0.5178,
+        "high_risk_f1": 0.5516,
+        "confusion_matrix": [
+          [
+            1440,
+            492,
+            171
+          ],
+          [
+            566,
+            627,
+            494
+          ],
+          [
+            153,
+            343,
+            714
+          ]
+        ],
+        "ordinal_analysis": {
+          "exact_match_pct": 55.62,
+          "adjacent_error_pct": 37.9,
+          "extreme_error_pct": 6.48,
+          "exact_or_adjacent_pct": 93.52,
+          "ordinal_mae": 0.5086
+        },
+        "roc_auc": 0.7397,
+        "fit_time_sec": 2.23
+      },
+      "ExtraTrees": {
+        "accuracy": 0.5534,
+        "macro_precision": 0.5274,
+        "macro_recall": 0.5503,
+        "macro_f1": 0.5312,
+        "weighted_f1": 0.54,
+        "balanced_accuracy": 0.5503,
+        "per_class": {
+          "low": {
+            "precision": 0.6547,
+            "recall": 0.7052,
+            "f1": 0.679
+          },
+          "medium": {
+            "precision": 0.4248,
+            "recall": 0.2928,
+            "f1": 0.3467
+          },
+          "high": {
+            "precision": 0.5025,
+            "recall": 0.6529,
+            "f1": 0.5679
+          }
+        },
+        "high_risk_recall": 0.6529,
+        "high_risk_precision": 0.5025,
+        "high_risk_f1": 0.5679,
+        "confusion_matrix": [
+          [
+            1483,
+            416,
+            204
+          ],
+          [
+            615,
+            494,
+            578
+          ],
+          [
+            167,
+            253,
+            790
+          ]
+        ],
+        "ordinal_analysis": {
+          "exact_match_pct": 55.34,
+          "adjacent_error_pct": 37.24,
+          "extreme_error_pct": 7.42,
+          "exact_or_adjacent_pct": 92.58,
+          "ordinal_mae": 0.5208
+        },
+        "roc_auc": 0.7415,
+        "fit_time_sec": 0.6
+      },
+      "HistGradientBoosting": {
+        "accuracy": 0.5606,
+        "macro_precision": 0.5433,
+        "macro_recall": 0.5568,
+        "macro_f1": 0.5478,
+        "weighted_f1": 0.5569,
+        "balanced_accuracy": 0.5568,
+        "per_class": {
+          "low": {
+            "precision": 0.6781,
+            "recall": 0.6752,
+            "f1": 0.6767
+          },
+          "medium": {
+            "precision": 0.4347,
+            "recall": 0.3746,
+            "f1": 0.4024
+          },
+          "high": {
+            "precision": 0.5172,
+            "recall": 0.6207,
+            "f1": 0.5642
+          }
+        },
+        "high_risk_recall": 0.6207,
+        "high_risk_precision": 0.5172,
+        "high_risk_f1": 0.5642,
+        "confusion_matrix": [
+          [
+            1420,
+            504,
+            179
+          ],
+          [
+            533,
+            632,
+            522
+          ],
+          [
+            141,
+            318,
+            751
+          ]
+        ],
+        "ordinal_analysis": {
+          "exact_match_pct": 56.06,
+          "adjacent_error_pct": 37.54,
+          "extreme_error_pct": 6.4,
+          "exact_or_adjacent_pct": 93.6,
+          "ordinal_mae": 0.5034
+        },
+        "roc_auc": 0.7434,
+        "fit_time_sec": 1.2
+      },
+      "XGBoost": {
+        "accuracy": 0.5628,
+        "macro_precision": 0.5445,
+        "macro_recall": 0.5598,
+        "macro_f1": 0.5493,
+        "weighted_f1": 0.558,
+        "balanced_accuracy": 0.5598,
+        "per_class": {
+          "low": {
+            "precision": 0.6782,
+            "recall": 0.6805,
+            "f1": 0.6793
+          },
+          "medium": {
+            "precision": 0.4353,
+            "recall": 0.3651,
+            "f1": 0.3972
+          },
+          "high": {
+            "precision": 0.52,
+            "recall": 0.6339,
+            "f1": 0.5713
+          }
+        },
+        "high_risk_recall": 0.6339,
+        "high_risk_precision": 0.52,
+        "high_risk_f1": 0.5713,
+        "confusion_matrix": [
+          [
+            1431,
+            496,
+            176
+          ],
+          [
+            539,
+            616,
+            532
+          ],
+          [
+            140,
+            303,
+            767
+          ]
+        ],
+        "ordinal_analysis": {
+          "exact_match_pct": 56.28,
+          "adjacent_error_pct": 37.4,
+          "extreme_error_pct": 6.32,
+          "exact_or_adjacent_pct": 93.68,
+          "ordinal_mae": 0.5004
+        },
+        "roc_auc": 0.7464,
+        "fit_time_sec": 1.09
+      }
+    },
+    "selected_model": "XGBoost",
+    "group_test_metrics": {
+      "accuracy": 0.5484,
+      "macro_precision": 0.5263,
+      "macro_recall": 0.5459,
+      "macro_f1": 0.5318,
+      "weighted_f1": 0.5414,
+      "balanced_accuracy": 0.5459,
+      "per_class": {
+        "low": {
+          "precision": 0.6518,
+          "recall": 0.6826,
+          "f1": 0.6668
+        },
+        "medium": {
+          "precision": 0.4406,
+          "recall": 0.3462,
+          "f1": 0.3878
+        },
+        "high": {
+          "precision": 0.4864,
+          "recall": 0.6088,
+          "f1": 0.5408
+        }
+      },
+      "high_risk_recall": 0.6088,
+      "high_risk_precision": 0.4864,
+      "high_risk_f1": 0.5408,
+      "confusion_matrix": [
+        [
+          1471,
+          512,
+          172
+        ],
+        [
+          620,
+          608,
+          528
+        ],
+        [
+          166,
+          260,
+          663
+        ]
+      ],
+      "ordinal_analysis": {
+        "exact_match_pct": 54.84,
+        "adjacent_error_pct": 38.4,
+        "extreme_error_pct": 6.76,
+        "exact_or_adjacent_pct": 93.24,
+        "ordinal_mae": 0.5192
+      },
+      "roc_auc": 0.7296
+    },
+    "temporal_test_metrics": {
+      "accuracy": 0.5549,
+      "macro_precision": 0.5367,
+      "macro_recall": 0.5547,
+      "macro_f1": 0.5416,
+      "weighted_f1": 0.5485,
+      "balanced_accuracy": 0.5547,
+      "per_class": {
+        "low": {
+          "precision": 0.6675,
+          "recall": 0.6838,
+          "f1": 0.6755
+        },
+        "medium": {
+          "precision": 0.4426,
+          "recall": 0.3532,
+          "f1": 0.3929
+        },
+        "high": {
+          "precision": 0.5,
+          "recall": 0.6272,
+          "f1": 0.5564
+        }
+      },
+      "high_risk_recall": 0.6272,
+      "high_risk_precision": 0.5,
+      "high_risk_f1": 0.5564,
+      "confusion_matrix": [
+        [
+          2206,
+          741,
+          279
+        ],
+        [
+          880,
+          964,
+          885
+        ],
+        [
+          219,
+          473,
+          1164
+        ]
+      ],
+      "ordinal_analysis": {
+        "exact_match_pct": 55.49,
+        "adjacent_error_pct": 38.14,
+        "extreme_error_pct": 6.38,
+        "exact_or_adjacent_pct": 93.62,
+        "ordinal_mae": 0.5089
+      },
+      "roc_auc": 0.7417
+    },
+    "feature_importance": {
+      "avg_sprint_velocity": 0.2118,
+      "remaining_work": 0.1642,
+      "budget_utilization": 0.1602,
+      "team_workload": 0.1223,
+      "task_completion_rate": 0.1156,
+      "progress": 0.1122,
+      "overdue_tasks": 0.0473,
+      "total_bugs": 0.0328,
+      "critical_issues": 0.0194,
+      "high_priority_tasks": 0.0143,
+      "total_tasks": 0.0
+    }
+  },
+  "deadline_delay": {
+    "features": [
+      "progress",
+      "task_completion_rate",
+      "overdue_tasks",
+      "critical_issues",
+      "team_workload",
+      "days_remaining",
+      "progress_gap"
+    ],
+    "validation_benchmark": {
+      "Ridge": {
+        "mae": 3.3005,
+        "rmse": 4.1568,
+        "r2": 0.2428,
+        "median_ae": 2.7919,
+        "p90_ae": 6.763,
+        "p95_ae": 8.1865,
+        "fit_time_sec": 0.01
+      },
+      "RandomForestRegressor": {
+        "mae": 3.3239,
+        "rmse": 4.2001,
+        "r2": 0.227,
+        "median_ae": 2.7693,
+        "p90_ae": 6.8909,
+        "p95_ae": 8.2441,
+        "fit_time_sec": 10.66
+      },
+      "GradientBoostingRegressor": {
+        "mae": 3.313,
+        "rmse": 4.1813,
+        "r2": 0.2339,
+        "median_ae": 2.7641,
+        "p90_ae": 6.8665,
+        "p95_ae": 8.1854,
+        "fit_time_sec": 37.52
+      },
+      "HistGradientBoostingRegressor": {
+        "mae": 3.3147,
+        "rmse": 4.1839,
+        "r2": 0.2329,
+        "median_ae": 2.7686,
+        "p90_ae": 6.8565,
+        "p95_ae": 8.2727,
+        "fit_time_sec": 1.11
+      },
+      "XGBoostRegressor": {
+        "mae": 3.3111,
+        "rmse": 4.1776,
+        "r2": 0.2352,
+        "median_ae": 2.7794,
+        "p90_ae": 6.8459,
+        "p95_ae": 8.2083,
+        "fit_time_sec": 1.49
+      }
+    },
+    "selected_model": "Ridge",
+    "group_test_metrics": {
+      "mae": 3.1073,
+      "rmse": 3.9031,
+      "r2": 0.2496,
+      "median_ae": 2.6464,
+      "p90_ae": 6.4009,
+      "p95_ae": 7.6843
+    },
+    "temporal_test_metrics": {
+      "mae": 3.2666,
+      "rmse": 4.0524,
+      "r2": 0.2414,
+      "median_ae": 2.8158,
+      "p90_ae": 6.6115,
+      "p95_ae": 7.7975
+    }
+  },
+  "frozen_models_verification": {
+    "burnout_risk": "FROZEN_VERIFIED (100% identical targets in V1 and V2)",
+    "budget_overrun": "FROZEN_VERIFIED (100% identical targets in V1 and V2)"
+  },
+  "v1_vs_v2_comparison": {
+    "project_risk": {
+      "v1_group_accuracy": 0.495,
+      "v2_group_accuracy": 0.5484,
+      "accuracy_gain_pct_points": 5.34,
+      "v1_macro_f1": 0.4933,
+      "v2_macro_f1": 0.5318,
+      "macro_f1_gain": 0.0385,
+      "v1_high_risk_recall": 0.543,
+      "v2_high_risk_recall": 0.6088,
+      "v1_extreme_error_pct": 7.52,
+      "v2_extreme_error_pct": 6.76,
+      "v1_temporal_f1": 0.5059,
+      "v2_temporal_f1": 0.5416
+    },
+    "deadline_delay": {
+      "v1_group_mae": 4.6335,
+      "v2_group_mae": 3.1073,
+      "mae_reduction_days": 1.53,
+      "mae_reduction_pct": 32.94,
+      "v1_r2": 0.2363,
+      "v2_r2": 0.2496,
+      "r2_gain": 0.0133
+    }
+  },
+  "recommendation": "V2 IMPROVEMENT ACCEPTED (Substantial, scientifically honest improvement on Project Risk and Deadline Delay)"
+}

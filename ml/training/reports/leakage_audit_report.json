@@ -1,0 +1,210 @@
+{
+  "correlations": {
+    "project_risk": {
+      "risk_class_num": 1.0,
+      "deadline_delay_target_days": 0.6028,
+      "change_request_frequency": 0.41,
+      "external_dependencies": 0.3891,
+      "budget_overrun_target_pct": 0.3486,
+      "technical_debt": 0.3205,
+      "spending_rate_ratio": 0.2893,
+      "budget_utilization": 0.2893,
+      "budget_overrun_target": 0.256,
+      "open_issues": 0.2513,
+      "workload_ratio": 0.2503,
+      "open_issues_ratio": 0.2482,
+      "team_workload": 0.2326,
+      "overdue_task_count": 0.2241,
+      "overdue_tasks": 0.2241
+    },
+    "burnout_risk": {
+      "burnout_risk_num": 1.0,
+      "workload_ratio": 0.8222,
+      "team_workload": 0.7474,
+      "assigned_hours": 0.717,
+      "overtime_hours": 0.6904,
+      "estimated_hours": 0.6416,
+      "satisfaction_level": 0.6031,
+      "stress_level": 0.5899,
+      "actual_hours": 0.5879,
+      "deadline_delay_target_days": 0.3365,
+      "risk_class_num": 0.214,
+      "weekly_capacity_hours": 0.1146,
+      "experience_years": 0.0949,
+      "resource_availability": 0.078,
+      "availability": 0.078
+    },
+    "deadline_delay": {
+      "deadline_delay_target_days": 1.0,
+      "risk_class_num": 0.6028,
+      "change_request_frequency": 0.5467,
+      "workload_ratio": 0.4014,
+      "team_workload": 0.3745,
+      "burnout_risk_num": 0.3365,
+      "overdue_task_count": 0.3038,
+      "overdue_tasks": 0.3038,
+      "stress_level": 0.2971,
+      "assigned_hours": 0.2681,
+      "technical_debt": 0.2639,
+      "satisfaction_level": 0.2564,
+      "estimated_hours": 0.2426,
+      "overtime_hours": 0.2222,
+      "actual_hours": 0.2204
+    },
+    "budget_overrun": {
+      "budget_overrun_target": 1.0,
+      "budget_overrun_target_pct": 0.7666,
+      "spent_amount": 0.6658,
+      "current_expenditure": 0.6658,
+      "spending_rate_ratio": 0.5662,
+      "budget_utilization": 0.5662,
+      "budget": 0.3185,
+      "risk_class_num": 0.256,
+      "complexity_score": 0.0812,
+      "deadline_delay_target_days": 0.0658,
+      "workload_ratio": 0.0343,
+      "burnout_risk_num": 0.0332,
+      "change_request_frequency": 0.0306,
+      "stress_level": 0.029,
+      "team_workload": 0.0284
+    }
+  },
+  "suspicious_features": {},
+  "models_config": {
+    "project_risk": {
+      "target": "risk_class_reference",
+      "type": "classification",
+      "classes": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "features": [
+        "progress",
+        "task_completion_rate",
+        "overdue_tasks",
+        "avg_sprint_velocity",
+        "total_bugs",
+        "critical_issues",
+        "team_workload",
+        "budget_utilization",
+        "remaining_work",
+        "high_priority_tasks",
+        "total_tasks"
+      ],
+      "group_col": "project_id"
+    },
+    "burnout_risk": {
+      "target": "burnout_risk_reference",
+      "type": "classification",
+      "classes": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "features": [
+        "workload_ratio",
+        "assigned_hours",
+        "overtime_hours",
+        "active_projects",
+        "active_task_count",
+        "overdue_task_count",
+        "sprint_story_points",
+        "completion_rate",
+        "high_priority_task_count"
+      ],
+      "group_col": "employee_id"
+    },
+    "deadline_delay": {
+      "target": "deadline_delay_target_days",
+      "type": "regression",
+      "features": [
+        "progress",
+        "task_completion_rate",
+        "overdue_tasks",
+        "critical_issues",
+        "team_workload",
+        "days_remaining",
+        "schedule_progress_pct",
+        "progress_gap"
+      ],
+      "group_col": "project_id"
+    },
+    "budget_overrun": {
+      "target": "budget_overrun_target",
+      "type": "regression",
+      "features": [
+        "budget_utilization",
+        "progress",
+        "spending_rate_ratio",
+        "remaining_work",
+        "overdue_tasks",
+        "critical_issues",
+        "team_workload",
+        "days_remaining"
+      ],
+      "group_col": "project_id"
+    }
+  },
+  "snapshot_audit": {
+    "safe_features": [
+      "sprint_story_points",
+      "task_completion_rate",
+      "overtime_hours",
+      "overdue_task_count",
+      "active_projects",
+      "remaining_work",
+      "spending_rate_ratio",
+      "completion_rate",
+      "high_priority_task_count",
+      "total_bugs",
+      "critical_issues",
+      "total_tasks",
+      "days_remaining",
+      "avg_sprint_velocity",
+      "assigned_hours",
+      "progress_gap",
+      "overdue_tasks",
+      "team_workload",
+      "active_task_count",
+      "progress",
+      "budget_utilization",
+      "workload_ratio",
+      "high_priority_tasks",
+      "schedule_progress_pct"
+    ],
+    "excluded_future_cols": [
+      "completed_date",
+      "resolved_at"
+    ],
+    "excluded_target_cols": [
+      "risk_class_reference",
+      "burnout_risk_reference",
+      "deadline_delay_target_days",
+      "budget_overrun_target",
+      "budget_overrun_target_pct"
+    ],
+    "excluded_identifier_cols": [
+      "observation_id",
+      "project_id",
+      "employee_id",
+      "task_id",
+      "sprint_id",
+      "issue_id",
+      "assigned_to",
+      "split",
+      "entity_type"
+    ],
+    "excluded_text_cols": [
+      "project_name",
+      "employee_name",
+      "task_name",
+      "title",
+      "description",
+      "goal",
+      "sprint_name",
+      "skills",
+      "required_skills"
+    ]
+  }
+}
