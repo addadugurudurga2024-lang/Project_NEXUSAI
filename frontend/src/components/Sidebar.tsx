@@ -16,6 +16,8 @@ import {
   BarChart3,
   TrendingUp,
   Bot,
+  Scale,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -89,6 +91,18 @@ const Sidebar: React.FC = () => {
           <NavLink to="/dashboard/resource-optimization" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Network size={20} />
             <span>Optimization</span>
+          </NavLink>
+        )}
+        {isManager && (
+          <NavLink to="/dashboard/what-if-simulation" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Sliders size={20} />
+            <span>What-If Simulator</span>
+          </NavLink>
+        )}
+        {isManager && (
+          <NavLink to="/dashboard/decisions" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Scale size={20} />
+            <span>Decision Log</span>
           </NavLink>
         )}
         {isManager && (

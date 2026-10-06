@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Briefcase, Users, CheckSquare, AlertCircle, TrendingUp, BarChart2, Shield, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Briefcase, Users, CheckSquare, AlertCircle, TrendingUp, BarChart2, Shield, Clock, XCircle, ArrowRight, UserCheck, Scale } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -8,26 +10,40 @@ import {
 } from 'recharts';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [summary, setSummary] = useState<any>(null);
   const [velocityData, setVelocityData] = useState<any[]>([]);
+  const [memberStatus, setMemberStatus] = useState<any>(null);
+  const [decisionStats, setDecisionStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const [summaryRes, velocityRes] = await Promise.all([
+      const calls: Promise<any>[] = [
         api.get('/dashboard/summary'),
         api.get('/dashboard/velocity'),
-      ]);
-      setSummary(summaryRes.data);
-      setVelocityData(velocityRes.data || []);
+      ];
+      if (user?.role === 'team_member') {
+        calls.push(api.get('/team-capacity/my-status').catch(() => ({ data: null })));
+      } else if (user?.role === 'project_manager' || user?.role === 'admin') {
+        calls.push(api.get('/decisions/stats').catch(() => ({ data: null })));
+      }
+      const results = await Promise.all(calls);
+      setSummary(results[0].data);
+      setVelocityData(results[1].data || []);
+      if (user?.role === 'team_member' && results[2]?.data) {
+        setMemberStatus(results[2].data);
+      } else if ((user?.role === 'project_manager' || user?.role === 'admin') && results[2]?.data) {
+        setDecisionStats(results[2].data);
+      }
     } catch (err: any) {
       console.error('Dashboard fetch failed', err);
       setError('Failed to load dashboard data. Is the backend running?');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchDashboard();
@@ -79,6 +95,108 @@ const Dashboard: React.FC = () => {
         <h1>Command Center</h1>
         <p>Enterprise project intelligence overview — live from MongoDB</p>
       </div>
+
+      {/* Team Member Placement Status Banner */}
+      {user?.role === 'team_member' && memberStatus && (
+        <div className={`dash-placement-banner glass-panel status-${memberStatus.status || 'none'}`}>
+          <div className="dash-placement-left">
+            <div className="dash-placement-icon">
+              {memberStatus.status === 'active' ? (
+                <UserCheck size={24} className="text-success" />
+              ) : memberStatus.status === 'pending' ? (
+                <Clock size={24} className="text-warning" />
+              ) : memberStatus.status === 'rejected' ? (
+                <XCircle size={24} className="text-error" />
+              ) : (
+                <Users size={24} className="text-muted" />
+              )}
+            </div>
+            <div>
+              <div className="dash-placement-top">
+                <span className="dash-placement-title">Team Placement Status</span>
+                <span className={`tc-status-pill ${memberStatus.status || 'none'}`}>
+                  {memberStatus.status === 'active'
+                    ? '✓ Active Member'
+                    : memberStatus.status === 'pending'
+                      ? '● Pending Review'
+                      : memberStatus.status === 'rejected'
+                        ? '✕ Request Rejected'
+                        : 'No PM Assignment'}
+                </span>
+              </div>
+              <p className="dash-placement-desc">
+                {memberStatus.status === 'active' ? (
+                  <>Assigned to <strong>{memberStatus.pm_name}</strong>'s direct team {memberStatus.pm_specialization ? `(${memberStatus.pm_specialization})` : ''}.</>
+                ) : memberStatus.status === 'pending' ? (
+                  <>Onboarding request sent to <strong>{memberStatus.pm_name}</strong> is awaiting PM review.</>
+                ) : memberStatus.status === 'rejected' ? (
+                  <>Request to join <strong>{memberStatus.pm_name}</strong>'s team was not approved. {memberStatus.rejection_reason ? `Reason: ${memberStatus.rejection_reason}` : ''}</>
+                ) : (
+                  <>You are not currently assigned to a Project Manager's team.</>
+                )}
+              </p>
+            </div>
+          </div>
+          <Link to="/dashboard/team-capacity" className="dash-placement-link">
+            <span>View Details</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      {/* Manager Decision Intelligence Overview Banner */}
+      {(user?.role === 'project_manager' || user?.role === 'admin') && decisionStats && (
+        <div className="glass-panel" style={{
+          padding: '1rem 1.25rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          borderLeft: '4px solid #6366f1',
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(30, 41, 59, 0.4) 100%)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background: 'rgba(99, 102, 241, 0.2)',
+              color: '#818cf8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Scale size={20} />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#f8fafc', fontWeight: 600 }}>Decision Intelligence &amp; Audit Log</h4>
+              <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+                <strong style={{ color: '#f8fafc' }}>{decisionStats.total || 0}</strong> formal management decisions recorded ·{' '}
+                <strong style={{ color: decisionStats.pending > 0 ? '#f59e0b' : '#94a3b8' }}>{decisionStats.pending || 0}</strong> awaiting action ·{' '}
+                <strong style={{ color: '#10b981' }}>{decisionStats.approved || 0}</strong> approved
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/decisions"
+            className="secondary-button"
+            style={{
+              padding: '0.45rem 0.9rem',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              textDecoration: 'none'
+            }}
+          >
+            <span>Review Decision Log</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="stats-grid">

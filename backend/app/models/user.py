@@ -7,6 +7,7 @@ from enum import Enum
 class UserRole(str, Enum):
     admin = "admin"
     project_manager = "project_manager"
+    manager = "manager"
     team_member = "team_member"
 
 
@@ -18,8 +19,8 @@ class UserCreate(BaseModel):
     specialization: Optional[str] = None
     # Team member employee profile fields (required when role=team_member)
     job_role: Optional[str] = None
-    skills: List[str] = []
-    weekly_capacity_hours: float = 40.0
+    skills: List[str] = Field(default_factory=list)
+    weekly_capacity_hours: Optional[float] = 40.0
     preferred_pm_id: Optional[str] = None
 
 

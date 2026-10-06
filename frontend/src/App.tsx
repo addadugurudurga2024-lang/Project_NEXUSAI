@@ -19,6 +19,9 @@ import Analytics from './pages/Analytics';
 import AIAssistant from './pages/AIAssistant';
 import TeamCapacity from './pages/TeamCapacity';
 
+import Decisions from './pages/Decisions';
+import WhatIfSimulation from './pages/WhatIfSimulation';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -68,6 +71,8 @@ function App() {
             <Route path="documents" element={<DocumentAI />} />
             <Route path="recommendations" element={<Recommendations />} />
             <Route path="resource-optimization" element={<ManagerRoute><ResourceOptimization /></ManagerRoute>} />
+            <Route path="what-if-simulation" element={<ManagerRoute><WhatIfSimulation /></ManagerRoute>} />
+            <Route path="decisions" element={<ManagerRoute><Decisions /></ManagerRoute>} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="reports" element={<ManagerRoute><Reports /></ManagerRoute>} />
             <Route path="analytics" element={<ManagerRoute><Analytics /></ManagerRoute>} />

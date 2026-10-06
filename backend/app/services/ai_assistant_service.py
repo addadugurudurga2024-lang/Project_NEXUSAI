@@ -108,6 +108,11 @@ async def get_scoped_context(user: dict, db, project_id_hint: Optional[str] = No
         rec_query = {"project_id": {"$in": scoped_project_ids}, "type": "task"}
     recommendations = await db.recommendations.find(rec_query).to_list(200)
 
+    # 7. Decisions (MANAGERS / ADMIN ONLY)
+    decisions = []
+    if role in ("admin", "project_manager") and scoped_project_ids:
+        decisions = await db.decisions.find({"project_id": {"$in": scoped_project_ids}}).sort("created_at", -1).to_list(100)
+
     return {
         "role": role,
         "user_name": user.get("name", "User"),
@@ -121,6 +126,7 @@ async def get_scoped_context(user: dict, db, project_id_hint: Optional[str] = No
         "employees": employees,
         "burnout_predictions": burnout_preds,
         "recommendations": recommendations,
+        "decisions": decisions,
         "today": today,
     }
 
@@ -195,6 +201,8 @@ def generate_grounded_fallback_response(query: str, ctx: Dict[str, Any], matched
             f"- Predicted Budget Overrun: **₹{overrun_amt:,.0f}**",
         ]
 
+        p_decisions = [d for d in ctx.get("decisions", []) if d.get("project_id") == pid]
+
         if p_recs:
             response_lines.append("")
             response_lines.append("**NexusAI Recommendations:**")
@@ -210,10 +218,19 @@ def generate_grounded_fallback_response(query: str, ctx: Dict[str, Any], matched
             if risk_class in ("HIGH", "MEDIUM") and delay_days > 0:
                 response_lines.append("- Consider reviewing resource allocations in the Optimization tab.")
 
+        if p_decisions:
+            response_lines.append("")
+            response_lines.append("**Recorded Management Decisions:**")
+            for d in p_decisions[:3]:
+                status_emoji = "✓" if d.get("decision_status") == "APPROVED" else ("✕" if d.get("decision_status") == "REJECTED" else "⏳")
+                response_lines.append(f"- {status_emoji} **[{d.get('decision_status')}]** {d.get('title')} (Decided by: {d.get('decision_maker_name') or d.get('created_by_name', 'PM')})")
+                if d.get("decision_rationale"):
+                    response_lines.append(f"  *Rationale: {d.get('decision_rationale')}*")
+
         return {
             "response": "\n".join(response_lines),
             "intent": "project_analysis",
-            "context_summary": {"project_name": p.get("name"), "risk_class": risk_class, "tasks": total_t},
+            "context_summary": {"project_name": p.get("name"), "risk_class": risk_class, "tasks": total_t, "decisions_count": len(p_decisions)},
             "recommendations": p_recs[:3],
         }
 
@@ -486,7 +503,44 @@ def generate_grounded_fallback_response(query: str, ctx: Dict[str, Any], matched
                 "recommendations": recs[:5],
             }
 
-    # 8. General Scope Overview
+    # 8. Decision Log / Management Decisions Question
+    if any(k in q for k in ["decision", "decisions", "decide", "management action", "decision log", "recorded decision"]):
+        if role == "team_member":
+            return {
+                "response": "Access restricted. Management decision logs and audit records are restricted to Project Managers and Administrators.",
+                "intent": "decisions_restricted",
+                "context_summary": {"decisions_count": 0},
+                "recommendations": [],
+            }
+
+        decisions = ctx.get("decisions", [])
+        if not decisions:
+            return {
+                "response": "No formal management decisions have been recorded yet in your authorized project scope. You can record decisions directly from the AI Insights, Optimization, or Decision Log tabs.",
+                "intent": "decisions_overview",
+                "context_summary": {"total_decisions": 0},
+                "recommendations": [],
+            }
+
+        lines = [
+            f"**Recorded Management Decisions ({len(decisions)} total in authorized scope):**",
+            ""
+        ]
+        for d in decisions[:5]:
+            status_emoji = "✓" if d.get("decision_status") == "APPROVED" else ("✕" if d.get("decision_status") == "REJECTED" else "⏳")
+            lines.append(f"- {status_emoji} **[{d.get('decision_status')}]** {d.get('title')} (*{d.get('project_name', 'Project')}*)")
+            lines.append(f"  - **Decision Maker:** {d.get('decision_maker_name') or d.get('created_by_name', 'PM')}")
+            if d.get("decision_rationale"):
+                lines.append(f"  - **Rationale:** {d.get('decision_rationale')}")
+
+        return {
+            "response": "\n".join(lines),
+            "intent": "decisions_overview",
+            "context_summary": {"total_decisions": len(decisions)},
+            "recommendations": [],
+        }
+
+    # 9. General Scope Overview
     lines = [
         f"**NexusAI Scope Summary for {ctx['user_name']} ({role.replace('_', ' ').title()}):**",
         f"- Active Projects: **{len(projects)}**",

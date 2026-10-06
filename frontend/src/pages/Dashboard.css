@@ -210,3 +210,93 @@
   color: #f87171;
   text-align: center;
 }
+
+/* ── Dashboard Team Placement Banner ── */
+.dash-placement-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.7);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dash-placement-banner.status-active {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+}
+
+.dash-placement-banner.status-pending {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+}
+
+.dash-placement-banner.status-rejected {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+}
+
+.dash-placement-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dash-placement-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-placement-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.dash-placement-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #f8fafc;
+}
+
+.dash-placement-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.dash-placement-desc strong {
+  color: #e2e8f0;
+}
+
+.dash-placement-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.dash-placement-link:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+}
+

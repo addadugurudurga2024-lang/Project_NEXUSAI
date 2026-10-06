@@ -43,11 +43,26 @@ async def get_dashboard_summary(
     low_risk = sum(1 for p in predictions if p.get("risk_class") == "LOW" or p.get("risk_level") == "LOW")
 
     # Employee stats
-    if role in ("admin", "project_manager"):
+    if role == "admin":
         total_employees = await db.employees.count_documents({"status": "active"})
         burnout_preds = await db.employee_risk_predictions.find({}).to_list(200)
         high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
         medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
+    elif role == "project_manager":
+        # Scoped to PM's line-managed active team members and project participants
+        active_mems = await db.team_memberships.find({"pm_user_id": uid, "status": "active"}).to_list(200)
+        scoped_eids = [m["employee_id"] for m in active_mems]
+        project_eids = await get_authorized_employee_ids(db, current_user, projects=projects)
+        all_pm_eids = list(set(scoped_eids + project_eids))
+
+        total_employees = len(scoped_eids) if scoped_eids else len(project_eids)
+        if all_pm_eids:
+            burnout_preds = await db.employee_risk_predictions.find({"employee_id": {"$in": all_pm_eids}}).to_list(200)
+            high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
+            medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
+        else:
+            high_burnout = 0
+            medium_burnout = 0
     else:
         emp_ids = await get_authorized_employee_ids(db, current_user)
         total_employees = len(emp_ids)
@@ -183,8 +198,9 @@ async def get_risk_overview(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Get project risk overview for all projects."""
-    projects = await db.projects.find({}).to_list(200)
+    """Get project risk overview for authorized projects."""
+    from app.services.project_scoping_service import get_authorized_projects
+    projects = await get_authorized_projects(db, current_user)
     result = []
     for p in projects:
         pid = str(p["_id"])
@@ -293,8 +309,16 @@ async def get_team_velocity(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Aggregate actual story points from completed tasks per sprint."""
-    sprints = await db.sprints.find({}).sort("start_date", 1).to_list(10)
+    """Aggregate actual story points from completed tasks per sprint in authorized projects."""
+    from app.services.project_scoping_service import get_authorized_project_ids
+    role = current_user.get("role", "team_member")
+    if role == "admin":
+        sprints = await db.sprints.find({}).sort("start_date", 1).to_list(10)
+    else:
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        valid_pids = [ObjectId(p) for p in authorized_pids if ObjectId.is_valid(p)]
+        sprints = await db.sprints.find({"project_id": {"$in": authorized_pids + valid_pids}}).sort("start_date", 1).to_list(10)
+
     velocity_data = []
     
     for sprint in sprints:

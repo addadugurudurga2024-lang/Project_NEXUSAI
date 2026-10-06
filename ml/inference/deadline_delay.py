@@ -65,7 +65,14 @@ def predict_deadline_delay(features: Dict[str, Any], project: dict) -> Dict[str,
     team_workload = float(features.get("team_workload", 50))
 
     total_days, days_remaining, schedule_progress = _parse_dates(project)
-    progress_gap = schedule_progress - progress  # positive = behind schedule
+    if "total_days" in features:
+        total_days = float(features["total_days"])
+    if "days_remaining" in features:
+        days_remaining = float(features["days_remaining"])
+    if "schedule_progress" in features:
+        schedule_progress = float(features["schedule_progress"])
+
+    progress_gap = float(features.get("progress_gap", schedule_progress - progress))
 
     factors = []
 
@@ -119,6 +126,7 @@ def predict_deadline_delay(features: Dict[str, Any], project: dict) -> Dict[str,
 
             return {
                 "delay_days": delay_days,
+                "raw_delay_days": round(raw_pred, 2),
                 "delay_probability": round(delay_prob, 3),
                 "contributing_factors": factors,
                 "model_name": "GradientBoostingRegressor",

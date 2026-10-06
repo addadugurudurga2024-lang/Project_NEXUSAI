@@ -705,3 +705,306 @@
   font-size: 0.82rem;
   color: #94a3b8;
 }
+
+/* ── Team Member Placement Status Hero ── */
+.tc-status-hero {
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.tc-status-hero.status-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.tc-status-hero.status-pending {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.tc-status-hero.status-rejected {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.tc-status-hero.status-none {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(100, 116, 139, 0.3);
+}
+
+.tc-status-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 20px;
+}
+
+.tc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.tc-status-badge.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.tc-status-badge.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.tc-status-badge.rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.tc-status-badge.none {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.tc-hero-date {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.tc-hero-date strong {
+  color: #f8fafc;
+}
+
+.tc-hero-content {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .tc-hero-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.tc-pm-info-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tc-pm-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.tc-label-small {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  font-weight: 600;
+  display: block;
+}
+
+.tc-pm-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 2px 0;
+}
+
+.tc-pm-spec {
+  font-size: 0.82rem;
+  color: #a5b4fc;
+  display: block;
+}
+
+.tc-pm-email {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.tc-hero-message-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tc-hero-message {
+  font-size: 1rem;
+  color: #f1f5f9;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.tc-active-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  width: fit-content;
+}
+
+.tc-rejection-reason-callout {
+  background: rgba(239, 68, 68, 0.15);
+  border-left: 3px solid #ef4444;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.88rem;
+  color: #fca5a5;
+}
+
+.tc-profile-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.88rem;
+}
+
+.tc-confirmed-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tc-confirmed-box strong {
+  color: #34d399;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tc-confirmed-box p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.tc-success-icon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tc-form-intro {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0 0 14px 0;
+  line-height: 1.45;
+}
+
+.tc-request-form-group {
+  margin-bottom: 14px;
+}
+
+.tc-request-form-group label {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.tc-request-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.tc-btn-submit-req {
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tc-btn-refresh {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+.tc-btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.tc-status-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.tc-status-pill.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.tc-status-pill.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.tc-status-pill.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+

@@ -218,8 +218,8 @@ async def get_pm_capacity_details(db, pm_user_id: str) -> Dict[str, Any]:
 
 
 async def get_all_pms_capacity_summary(db) -> List[Dict[str, Any]]:
-    """Returns capacity overview for all Project Managers in the organization."""
-    pms = await db.users.find({"role": "project_manager"}).to_list(100)
+    """Returns capacity overview for all active Project Managers in the organization."""
+    pms = await db.users.find({"role": "project_manager", "status": {"$ne": "inactive"}}).to_list(100)
     summaries = []
     for pm in pms:
         pm_id = str(pm["_id"])
@@ -441,6 +441,9 @@ async def approve_member_request(
     if reviewer_role != "admin" and reviewer_uid != pm_user_id:
         raise PermissionError("Unauthorized: Cannot approve candidate for another Project Manager's team")
 
+    if req.get("status") == "active":
+        return req
+
     # SERVER-SIDE CAPACITY ENFORCEMENT WITH CONCURRENCY LOCK
     async with _get_pm_lock(pm_user_id):
         active_count = await get_pm_active_member_count(db, pm_user_id)
@@ -508,19 +511,32 @@ async def reject_member_request(
     if reviewer_role != "admin" and reviewer_uid != pm_user_id:
         raise PermissionError("Unauthorized: Cannot manage requests for another Project Manager's team")
 
+    if req.get("status") == "rejected":
+        return req
+
     now_utc = datetime.now(timezone.utc)
+    rejection_msg = reason or "Rejected by Project Manager"
     res = await db.team_memberships.find_one_and_update(
-        {"_id": req["_id"]},
+        {
+            "_id": req["_id"],
+            "status": "pending",
+        },
         {
             "$set": {
                 "status": "rejected",
                 "reviewed_by": reviewer_uid,
                 "reviewed_at": now_utc,
-                "rejection_reason": reason or "Rejected by Project Manager",
+                "rejection_reason": rejection_msg,
             }
         },
         return_document=True,
     )
+
+    if not res:
+        updated_req = await db.team_memberships.find_one({"_id": req["_id"]})
+        if updated_req and updated_req.get("status") == "rejected":
+            return updated_req
+        raise ValueError("Request status is no longer pending")
 
     pm_user = await db.users.find_one({"_id": ObjectId(pm_user_id) if ObjectId.is_valid(pm_user_id) else pm_user_id})
     pm_name = pm_user.get("name", "Project Manager") if pm_user else "Project Manager"
@@ -529,6 +545,7 @@ async def reject_member_request(
         db=db,
         member_emp_id=res["employee_id"],
         pm_name=pm_name,
+        reason=reason,
     )
 
     return res

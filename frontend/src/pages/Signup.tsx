@@ -71,6 +71,8 @@ const Signup: React.FC = () => {
   const [weeklyCapacity, setWeeklyCapacity] = useState<number>(40);
   const [preferredPmId, setPreferredPmId] = useState('');
   const [pmsList, setPmsList] = useState<any[]>([]);
+  const [loadingPms, setLoadingPms] = useState(false);
+  const [pmsError, setPmsError] = useState('');
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -82,9 +84,21 @@ const Signup: React.FC = () => {
   // Fetch available PMs when team_member role is selected
   React.useEffect(() => {
     if (isTeamMember) {
+      setLoadingPms(true);
+      setPmsError('');
       api.get('/team-capacity/pms')
-        .then(res => setPmsList(res.data))
-        .catch(() => {});
+        .then(res => {
+          if (Array.isArray(res.data)) {
+            setPmsList(res.data);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load project managers', err);
+          setPmsError('Unable to load active Project Managers');
+        })
+        .finally(() => {
+          setLoadingPms(false);
+        });
     }
   }, [isTeamMember]);
 
@@ -110,6 +124,25 @@ const Signup: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName) {
+      setError('Please enter your full name.');
+      return;
+    }
+    if (!cleanEmail) {
+      setError('Please enter your work email.');
+      return;
+    }
+
+    // Auto-include pending skill if selected/typed but "+ Add" was not clicked
+    let finalSkills = [...skills];
+    const pendingSkill = skillSelect === 'Other / Custom' ? customSkill.trim() : skillSelect.trim();
+    if (pendingSkill && !finalSkills.includes(pendingSkill)) {
+      finalSkills.push(pendingSkill);
+    }
+
     // Client-side validation for team members
     if (isTeamMember) {
       if (!resolvedJobRole) {
@@ -120,11 +153,12 @@ const Signup: React.FC = () => {
         setError('Please select or enter a Specialization.');
         return;
       }
-      if (skills.length === 0) {
+      if (finalSkills.length === 0) {
         setError('Please add at least one skill.');
         return;
       }
-      if (weeklyCapacity <= 0 || weeklyCapacity > 168) {
+      const capNum = Number(weeklyCapacity);
+      if (isNaN(capNum) || capNum <= 0 || capNum > 168) {
         setError('Weekly capacity must be between 1 and 168 hours.');
         return;
       }
@@ -132,14 +166,20 @@ const Signup: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const payload: any = { name, email, password, role };
+      const payload: any = {
+        name: cleanName,
+        email: cleanEmail,
+        password,
+        role,
+      };
+
       if (isTeamMember) {
         payload.job_role = resolvedJobRole;
         payload.specialization = resolvedSpecialization;
-        payload.skills = skills;
-        payload.weekly_capacity_hours = weeklyCapacity;
-        if (preferredPmId) {
-          payload.preferred_pm_id = preferredPmId;
+        payload.skills = finalSkills;
+        payload.weekly_capacity_hours = Number(weeklyCapacity) > 0 ? Number(weeklyCapacity) : 40.0;
+        if (preferredPmId && preferredPmId.trim() && preferredPmId !== 'none') {
+          payload.preferred_pm_id = preferredPmId.trim();
         }
       }
 
@@ -147,8 +187,24 @@ const Signup: React.FC = () => {
       await login(response.data.access_token);
       navigate('/dashboard');
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.detail || 'Failed to register account');
+      console.error('Signup error:', err);
+      const detail = err.response?.data?.detail;
+      let errorMsg = 'Failed to register account';
+
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail)) {
+        errorMsg = detail
+          .map((d: any) => {
+            const loc = Array.isArray(d.loc) ? d.loc.filter((l: any) => l !== 'body').join('.') : '';
+            return loc ? `${loc}: ${d.msg}` : (d.msg || JSON.stringify(d));
+          })
+          .join('; ');
+      } else if (detail && typeof detail === 'object') {
+        errorMsg = JSON.stringify(detail);
+      }
+
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -368,15 +424,27 @@ const Signup: React.FC = () => {
                   id="preferredPm"
                   value={preferredPmId}
                   onChange={(e) => setPreferredPmId(e.target.value)}
-                  className="role-select"
+                  className="role-select pm-dropdown-select"
+                  disabled={loadingPms}
                 >
-                  <option value="">Select a preferred Project Manager…</option>
+                  <option value="">
+                    {loadingPms
+                      ? 'Loading Project Managers...'
+                      : pmsList.length === 0
+                        ? 'No active Project Managers available'
+                        : 'Select a preferred Project Manager (Optional)...'}
+                  </option>
                   {pmsList.map(pm => (
                     <option key={pm.pm_user_id} value={pm.pm_user_id}>
-                      {pm.name} ({pm.active_members_count}/18 slots occupied {pm.is_full ? '— FULL' : `— ${pm.available_capacity} available`})
+                      {pm.name} {pm.specialization ? `(${pm.specialization})` : ''} — {pm.active_members_count}/{pm.max_capacity || 18} slots {pm.is_full ? '(FULL)' : `(${pm.available_capacity} available)`}
                     </option>
                   ))}
                 </select>
+                {pmsError && (
+                  <p className="skills-hint" style={{ color: 'var(--error)', marginTop: '4px' }}>
+                    {pmsError}
+                  </p>
+                )}
                 <p className="skills-hint" style={{ marginTop: '4px' }}>
                   Your preferred PM will receive an association request to review and approve your active team placement.
                 </p>

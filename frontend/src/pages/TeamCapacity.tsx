@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Users,
   UserCheck,
@@ -11,6 +11,12 @@ import {
   Shield,
   Layers,
   Info,
+  Clock,
+  Send,
+  RefreshCw,
+  Mail,
+  Calendar,
+  Check,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -51,12 +57,59 @@ interface PMRecommendation {
   reasons: string[];
 }
 
+interface MemberStatusData {
+  has_employee_profile: boolean;
+  employee_id?: string;
+  employee_name?: string;
+  employee_email?: string;
+  employee_role?: string;
+  employee_skills?: string[];
+  employee_specialization?: string;
+  employee_weekly_capacity_hours?: number;
+  status: 'active' | 'pending' | 'rejected' | 'none';
+  pm_name?: string | null;
+  pm_user_id?: string | null;
+  pm_email?: string | null;
+  pm_specialization?: string | null;
+  rejection_reason?: string | null;
+  requested_at?: string | null;
+  reviewed_at?: string | null;
+  assigned_at?: string | null;
+  message?: string;
+  all_requests?: any[];
+}
+
+const formatDate = (val?: string | null) => {
+  if (!val) return '—';
+  try {
+    return new Date(val).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return String(val);
+  }
+};
+
 const TeamCapacity: React.FC = () => {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'project_manager' || isAdmin;
+  const isTeamMember = user?.role === 'team_member';
+
+  // Manager state
   const [capacityData, setCapacityData] = useState<any>(null);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [pmsList, setPmsList] = useState<any[]>([]);
   const [selectedPmId, setSelectedPmId] = useState<string>('');
+
+  // Team member state
+  const [memberStatus, setMemberStatus] = useState<MemberStatusData | null>(null);
+  const [newPmSelection, setNewPmSelection] = useState<string>('');
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+
+  // Common state
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,19 +120,14 @@ const TeamCapacity: React.FC = () => {
   const [recommendationData, setRecommendationData] = useState<any>(null);
   const [recommendLoading, setRecommendLoading] = useState(false);
 
-  const isAdmin = user?.role === 'admin';
-  const isManager = user?.role === 'project_manager' || isAdmin;
-
-  const fetchData = async (pmId?: string) => {
+  const fetchManagerData = useCallback(async (pmId?: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch PMs list for Admin selection
-      if (isAdmin) {
-        const pmsRes = await api.get('/team-capacity/pms');
-        setPmsList(pmsRes.data);
-      }
+      // Fetch PMs list for Admin selection or general overview
+      const pmsRes = await api.get('/team-capacity/pms');
+      setPmsList(pmsRes.data);
 
       // Fetch capacity details
       const capUrl = pmId ? `/team-capacity/my-capacity?pm_user_id=${pmId}` : '/team-capacity/my-capacity';
@@ -94,12 +142,37 @@ const TeamCapacity: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchMemberData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch PM list so member can request a new PM if needed
+      const [statusRes, pmsRes] = await Promise.all([
+        api.get('/team-capacity/my-status'),
+        api.get('/team-capacity/pms'),
+      ]);
+
+      setMemberStatus(statusRes.data);
+      setPmsList(pmsRes.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to load team placement status');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchData(selectedPmId);
-  }, [selectedPmId]);
+    if (isTeamMember) {
+      fetchMemberData();
+    } else {
+      fetchManagerData(selectedPmId);
+    }
+  }, [isTeamMember, selectedPmId, fetchMemberData, fetchManagerData]);
 
+  // PM Approve action
   const handleApprove = async (requestId: string) => {
     setActionLoading(true);
     setError(null);
@@ -107,7 +180,7 @@ const TeamCapacity: React.FC = () => {
     try {
       await api.post(`/team-capacity/requests/${requestId}/approve`);
       setSuccessMsg('Candidate approved and assigned to active team!');
-      await fetchData(selectedPmId);
+      await fetchManagerData(selectedPmId);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to approve candidate');
     } finally {
@@ -115,6 +188,7 @@ const TeamCapacity: React.FC = () => {
     }
   };
 
+  // PM Reject action
   const handleReject = async (requestId: string) => {
     setActionLoading(true);
     setError(null);
@@ -122,7 +196,7 @@ const TeamCapacity: React.FC = () => {
     try {
       await api.post(`/team-capacity/requests/${requestId}/reject`);
       setSuccessMsg('Candidate request rejected.');
-      await fetchData(selectedPmId);
+      await fetchManagerData(selectedPmId);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to reject candidate');
     } finally {
@@ -130,6 +204,7 @@ const TeamCapacity: React.FC = () => {
     }
   };
 
+  // AI Matching analysis
   const handleAnalyzeCandidate = async (req: PendingRequest) => {
     setAnalyzingCandidate(req);
     setRecommendLoading(true);
@@ -143,15 +218,281 @@ const TeamCapacity: React.FC = () => {
     }
   };
 
+  // Team Member: Submit new PM request
+  const handleSubmitNewRequest = async () => {
+    if (!newPmSelection) {
+      setError('Please select a Project Manager to submit request.');
+      return;
+    }
+    setRequestSubmitting(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await api.post(`/team-capacity/request/${newPmSelection}`);
+      setSuccessMsg('Onboarding request submitted to Project Manager successfully!');
+      setNewPmSelection('');
+      await fetchMemberData();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to submit PM request');
+    } finally {
+      setRequestSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="tc-container tc-loading">
         <Users className="animate-spin" size={32} />
-        <p>Loading Team Capacity & Allocation Intelligence…</p>
+        <p>Loading Team Capacity & Placement Intelligence…</p>
       </div>
     );
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // TEAM MEMBER VIEW (Authoritative Placement & Line Management Status)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (isTeamMember) {
+    const status = memberStatus?.status || 'none';
+    const hasActive = status === 'active';
+    const isPending = status === 'pending';
+    const isRejected = status === 'rejected';
+
+    return (
+      <div className="tc-container tc-member-container">
+        {/* ── Header ── */}
+        <div className="tc-header">
+          <div>
+            <h1 className="tc-title">
+              <Users className="tc-header-icon" /> Team Placement & Line Management Status
+            </h1>
+            <p className="tc-subtitle">
+              Enterprise direct team assignment • Max 18 Active Members per PM rule
+            </p>
+          </div>
+          <button className="tc-btn tc-btn-refresh" onClick={fetchMemberData} title="Refresh Status">
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
+
+        {error && <div className="tc-alert tc-alert-error"><AlertTriangle size={18} /> {error}</div>}
+        {successMsg && <div className="tc-alert tc-alert-success"><CheckCircle size={18} /> {successMsg}</div>}
+
+        {/* ── Authoritative Status Hero Banner ── */}
+        <div className={`tc-status-hero glass-panel status-${status}`}>
+          <div className="tc-status-hero-top">
+            <div className="tc-status-pill-wrap">
+              {hasActive && (
+                <span className="tc-status-badge active">
+                  <CheckCircle size={16} /> Approved / Active Team Member
+                </span>
+              )}
+              {isPending && (
+                <span className="tc-status-badge pending">
+                  <Clock size={16} /> Pending PM Review
+                </span>
+              )}
+              {isRejected && (
+                <span className="tc-status-badge rejected">
+                  <XCircle size={16} /> Request Not Approved
+                </span>
+              )}
+              {status === 'none' && (
+                <span className="tc-status-badge none">
+                  <Info size={16} /> No Active PM Assignment
+                </span>
+              )}
+            </div>
+            <div className="tc-hero-date">
+              {hasActive && <span>Assigned: <strong>{formatDate(memberStatus?.assigned_at || memberStatus?.reviewed_at)}</strong></span>}
+              {isPending && <span>Requested: <strong>{formatDate(memberStatus?.requested_at)}</strong></span>}
+              {isRejected && <span>Decision: <strong>{formatDate(memberStatus?.reviewed_at)}</strong></span>}
+            </div>
+          </div>
+
+          <div className="tc-hero-content">
+            <div className="tc-pm-info-box">
+              <div className="tc-pm-avatar">
+                {memberStatus?.pm_name ? memberStatus.pm_name.charAt(0) : 'P'}
+              </div>
+              <div>
+                <span className="tc-label-small">
+                  {hasActive ? 'Direct Line Manager (PM)' : isPending ? 'Requested Project Manager' : isRejected ? 'Previous Requested PM' : 'Project Manager'}
+                </span>
+                <h2 className="tc-pm-name">{memberStatus?.pm_name || 'Not Assigned'}</h2>
+                {memberStatus?.pm_specialization && (
+                  <span className="tc-pm-spec">{memberStatus.pm_specialization}</span>
+                )}
+                {memberStatus?.pm_email && (
+                  <div className="tc-pm-email"><Mail size={13} /> {memberStatus.pm_email}</div>
+                )}
+              </div>
+            </div>
+
+            <div className="tc-hero-message-box">
+              <p className="tc-hero-message">{memberStatus?.message}</p>
+              {hasActive && (
+                <div className="tc-active-notice">
+                  <Check size={14} /> Direct team capacity is active (18-member boundary verified).
+                </div>
+              )}
+              {isRejected && memberStatus?.rejection_reason && (
+                <div className="tc-rejection-reason-callout">
+                  <strong>Reason:</strong> {memberStatus.rejection_reason}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Employee Profile & Capacity Info ── */}
+        <div className="tc-grid">
+          <div className="tc-card glass-panel">
+            <div className="tc-card-header">
+              <h3><Briefcase size={18} /> Your Employee Profile</h3>
+            </div>
+            <div className="tc-card-body">
+              <div className="tc-profile-stat-row">
+                <span className="tc-stat-label">Full Name:</span>
+                <strong>{memberStatus?.employee_name || user?.name}</strong>
+              </div>
+              <div className="tc-profile-stat-row">
+                <span className="tc-stat-label">Functional Role:</span>
+                <span className="tc-role-pill">{memberStatus?.employee_role || 'Specialist'}</span>
+              </div>
+              {memberStatus?.employee_specialization && (
+                <div className="tc-profile-stat-row">
+                  <span className="tc-stat-label">Specialization:</span>
+                  <span>{memberStatus.employee_specialization}</span>
+                </div>
+              )}
+              <div className="tc-profile-stat-row">
+                <span className="tc-stat-label">Weekly Bandwidth:</span>
+                <span>{memberStatus?.employee_weekly_capacity_hours || 40} hours / week</span>
+              </div>
+              <div className="tc-profile-stat-row" style={{ alignItems: 'flex-start', marginTop: '6px' }}>
+                <span className="tc-stat-label">Skills:</span>
+                <div className="tc-skills-tags">
+                  {memberStatus?.employee_skills?.map((s) => (
+                    <span key={s} className="tc-skill-pill">{s}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* New Request Submission Card (Available if rejected or none) */}
+          <div className="tc-card glass-panel">
+            <div className="tc-card-header">
+              <h3><Send size={18} /> {isRejected ? 'Submit Request to Another PM' : hasActive ? 'Line Management Placement' : 'Request PM Association'}</h3>
+            </div>
+            <div className="tc-card-body">
+              {hasActive ? (
+                <div className="tc-confirmed-box">
+                  <CheckCircle size={24} className="tc-success-icon" />
+                  <div>
+                    <strong>You are actively placed!</strong>
+                    <p>
+                      Your direct line management is linked to {memberStatus?.pm_name}. Any project or task allocations will be coordinated through your Project Manager.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p className="tc-form-intro">
+                    {isRejected
+                      ? 'Your previous request was rejected. You can select another active Project Manager with available slots to submit a new request.'
+                      : isPending
+                        ? 'Your request is currently awaiting review. You can also re-submit to a different PM if needed.'
+                        : 'Select an active Project Manager below to join their direct line-management team.'}
+                  </p>
+
+                  <div className="tc-request-form-group">
+                    <label>Select Project Manager:</label>
+                    <select
+                      value={newPmSelection}
+                      onChange={(e) => setNewPmSelection(e.target.value)}
+                      className="tc-select tc-request-select"
+                      disabled={requestSubmitting}
+                    >
+                      <option value="">Choose an active Project Manager...</option>
+                      {pmsList.map((pm) => (
+                        <option key={pm.pm_user_id} value={pm.pm_user_id} disabled={pm.is_full}>
+                          {pm.name} {pm.specialization ? `(${pm.specialization})` : ''} — {pm.active_members_count}/18 slots {pm.is_full ? '(FULL)' : `(${pm.available_capacity} available)`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    className="tc-btn tc-btn-submit-req"
+                    onClick={handleSubmitNewRequest}
+                    disabled={!newPmSelection || requestSubmitting}
+                  >
+                    <Send size={14} />
+                    {requestSubmitting ? 'Submitting Request…' : 'Submit Placement Request'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Request History Timeline ── */}
+        {memberStatus?.all_requests && memberStatus.all_requests.length > 0 && (
+          <div className="tc-section">
+            <div className="tc-section-header">
+              <h2><Calendar size={20} /> Request & Decision History</h2>
+              <p>Authoritative log of all team placement requests</p>
+            </div>
+
+            <div className="tc-table-container">
+              <table className="tc-table">
+                <thead>
+                  <tr>
+                    <th>Project Manager</th>
+                    <th>Status</th>
+                    <th>Requested Date</th>
+                    <th>Reviewed / Decision Date</th>
+                    <th>Decision Notes / Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memberStatus.all_requests.map((req) => (
+                    <tr key={req.id || req._id}>
+                      <td>
+                        <strong>{req.pm_name || 'Project Manager'}</strong>
+                        {req.pm_specialization && <span className="tc-spec-text"> • {req.pm_specialization}</span>}
+                      </td>
+                      <td>
+                        <span className={`tc-status-pill ${req.status}`}>
+                          {req.status === 'active' ? '✓ Approved' : req.status === 'pending' ? '● Pending' : '✕ Rejected'}
+                        </span>
+                      </td>
+                      <td>{formatDate(req.requested_at)}</td>
+                      <td>{formatDate(req.reviewed_at || req.assigned_at)}</td>
+                      <td>
+                        {req.rejection_reason ? (
+                          <span className="text-error">{req.rejection_reason}</span>
+                        ) : req.status === 'active' ? (
+                          <span className="text-success">Approved by {req.pm_name || 'PM'}</span>
+                        ) : (
+                          <span className="text-muted">Awaiting decision</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PROJECT MANAGER / ADMIN VIEW (Full Capacity & Intelligence Dashboard)
+  // ══════════════════════════════════════════════════════════════════════════
   const activeCount = capacityData?.active_members_count || 0;
   const maxCap = capacityData?.max_capacity || 18;
   const availCap = capacityData?.available_capacity || 0;
@@ -332,7 +673,7 @@ const TeamCapacity: React.FC = () => {
                       </div>
                     </td>
                     <td>{req.pm_name || 'PM'}</td>
-                    <td>{new Date(req.requested_at).toLocaleDateString()}</td>
+                    <td>{formatDate(req.requested_at)}</td>
                     <td>
                       <div className="tc-actions-cell">
                         {isManager && (
@@ -406,7 +747,7 @@ const TeamCapacity: React.FC = () => {
                         ))}
                       </div>
                     </td>
-                    <td>{mem.assigned_at ? new Date(mem.assigned_at).toLocaleDateString() : 'Active'}</td>
+                    <td>{formatDate(mem.assigned_at)}</td>
                   </tr>
                 ))}
               </tbody>

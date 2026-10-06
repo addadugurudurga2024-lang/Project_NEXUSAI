@@ -35,7 +35,6 @@ def serialize_doc(doc: dict) -> dict:
 @router.get("/pms", response_model=List[Dict[str, Any]])
 async def list_pms_capacity(
     db=Depends(get_database),
-    current_user=Depends(get_current_user),
 ):
     """Returns capacity summary list for all Project Managers in the organization."""
     await init_team_memberships_if_needed(db)
@@ -214,12 +213,28 @@ async def get_my_membership_status(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Returns logged-in team member's active PM team membership and request history."""
+    """Returns logged-in team member's authoritative PM team membership status and request history."""
     await init_team_memberships_if_needed(db)
     uid = str(current_user["_id"])
     emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
     if not emp:
-        return {"has_employee_profile": False, "memberships": []}
+        return {
+            "has_employee_profile": False,
+            "status": "none",
+            "pm_name": None,
+            "pm_user_id": None,
+            "pm_email": None,
+            "pm_specialization": None,
+            "rejection_reason": None,
+            "requested_at": None,
+            "reviewed_at": None,
+            "assigned_at": None,
+            "message": "No employee profile associated with logged in user account.",
+            "active_membership": None,
+            "latest_request": None,
+            "all_requests": [],
+            "memberships": [],
+        }
 
     emp_id = str(emp["_id"])
     memberships = await db.team_memberships.find({"employee_id": emp_id}).sort("requested_at", -1).to_list(50)
@@ -231,15 +246,79 @@ async def get_my_membership_status(
         if pm:
             sm["pm_name"] = pm.get("name")
             sm["pm_email"] = pm.get("email")
+            sm["pm_specialization"] = pm.get("specialization")
         serialized.append(sm)
 
     active_membership = next((sm for sm in serialized if sm.get("status") == "active"), None)
+    pending_membership = next((sm for sm in serialized if sm.get("status") == "pending"), None)
+    rejected_membership = next((sm for sm in serialized if sm.get("status") == "rejected"), None)
+
+    if active_membership:
+        status_val = "active"
+        pm_name = active_membership.get("pm_name")
+        pm_user_id = active_membership.get("pm_user_id")
+        pm_email = active_membership.get("pm_email")
+        pm_spec = active_membership.get("pm_specialization")
+        rejection_reason = None
+        requested_at = active_membership.get("requested_at")
+        reviewed_at = active_membership.get("reviewed_at")
+        assigned_at = active_membership.get("assigned_at")
+        message = f"You are an active member of {pm_name or 'the Project Manager'}'s team."
+    elif pending_membership:
+        status_val = "pending"
+        pm_name = pending_membership.get("pm_name")
+        pm_user_id = pending_membership.get("pm_user_id")
+        pm_email = pending_membership.get("pm_email")
+        pm_spec = pending_membership.get("pm_specialization")
+        rejection_reason = None
+        requested_at = pending_membership.get("requested_at")
+        reviewed_at = None
+        assigned_at = None
+        message = f"Your onboarding request to join {pm_name or 'the Project Manager'}'s team is pending review."
+    elif rejected_membership:
+        status_val = "rejected"
+        pm_name = rejected_membership.get("pm_name")
+        pm_user_id = rejected_membership.get("pm_user_id")
+        pm_email = rejected_membership.get("pm_email")
+        pm_spec = rejected_membership.get("pm_specialization")
+        rejection_reason = rejected_membership.get("rejection_reason") or "Rejected by Project Manager"
+        requested_at = rejected_membership.get("requested_at")
+        reviewed_at = rejected_membership.get("reviewed_at")
+        assigned_at = None
+        message = f"Your request to join {pm_name or 'the Project Manager'}'s team was not approved."
+    else:
+        status_val = "none"
+        pm_name = None
+        pm_user_id = None
+        pm_email = None
+        pm_spec = None
+        rejection_reason = None
+        requested_at = None
+        reviewed_at = None
+        assigned_at = None
+        message = "You are not currently assigned to a Project Manager's team."
 
     return {
         "has_employee_profile": True,
         "employee_id": emp_id,
+        "employee_name": emp.get("name"),
+        "employee_email": emp.get("email"),
         "employee_role": emp.get("role"),
         "employee_skills": emp.get("skills", []),
+        "employee_specialization": emp.get("specialization"),
+        "employee_weekly_capacity_hours": emp.get("weekly_capacity_hours", 40.0),
+        "status": status_val,
+        "pm_name": pm_name,
+        "pm_user_id": pm_user_id,
+        "pm_email": pm_email,
+        "pm_specialization": pm_spec,
+        "rejection_reason": rejection_reason,
+        "requested_at": requested_at,
+        "reviewed_at": reviewed_at,
+        "assigned_at": assigned_at,
+        "message": message,
         "active_membership": active_membership,
+        "latest_request": serialized[0] if serialized else None,
         "all_requests": serialized,
+        "memberships": serialized,
     }

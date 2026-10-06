@@ -42,15 +42,18 @@ async def signup(data: UserCreate, db=Depends(get_database)):
             )
 
     # Validate required employee fields for team_member at signup
+    clean_skills = [str(s).strip() for s in (data.skills or []) if str(s).strip()]
+    cap_hours = float(data.weekly_capacity_hours) if (data.weekly_capacity_hours is not None and float(data.weekly_capacity_hours) > 0) else 40.0
+
     if role_str == "team_member":
         missing = []
-        if not data.job_role or not data.job_role.strip():
+        if not data.job_role or not str(data.job_role).strip():
             missing.append("job_role")
-        if not data.specialization or not data.specialization.strip():
+        if not data.specialization or not str(data.specialization).strip():
             missing.append("specialization")
-        if not data.skills:
+        if not clean_skills:
             missing.append("at least one skill")
-        if data.weekly_capacity_hours <= 0 or data.weekly_capacity_hours > 168:
+        if cap_hours <= 0 or cap_hours > 168:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="weekly_capacity_hours must be between 1 and 168",
@@ -61,12 +64,15 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                 detail=f"Team members must provide: {', '.join(missing)}",
             )
 
+    clean_email = str(data.email).strip().lower()
+    clean_name = str(data.name).strip()
+
     doc = {
-        "name": data.name,
-        "email": data.email,
+        "name": clean_name,
+        "email": clean_email,
         "password_hash": get_password_hash(data.password),
         "role": role_str,
-        "specialization": data.specialization,
+        "specialization": str(data.specialization).strip() if data.specialization else None,
         "created_at": datetime.utcnow(),
     }
     result = await db.users.insert_one(doc)
@@ -78,7 +84,7 @@ async def signup(data: UserCreate, db=Depends(get_database)):
     # -------------------------------------------------------
     if role_str == "team_member":
         # Dedup guard: check if an employee already exists for this email
-        existing_emp = await db.employees.find_one({"email": data.email})
+        existing_emp = await db.employees.find_one({"email": clean_email})
         if existing_emp:
             # Link the existing employee to the new user account
             await db.employees.update_one(
@@ -88,13 +94,13 @@ async def signup(data: UserCreate, db=Depends(get_database)):
             created_emp_id = str(existing_emp["_id"])
         else:
             employee_doc = {
-                "name": data.name,
-                "email": data.email,
-                "role": data.job_role.strip(),          # job title e.g. "Cybersecurity Engineer"
-                "specialization": data.specialization.strip() if data.specialization else None,
-                "skills": data.skills,
+                "name": clean_name,
+                "email": clean_email,
+                "role": str(data.job_role).strip(),          # job title e.g. "Cybersecurity Engineer"
+                "specialization": str(data.specialization).strip() if data.specialization else None,
+                "skills": clean_skills,
                 "experience_years": 0.0,
-                "weekly_capacity_hours": data.weekly_capacity_hours,
+                "weekly_capacity_hours": cap_hours,
                 "availability_percentage": 100.0,
                 "status": "active",
                 "user_id": user_id_str,
@@ -113,12 +119,13 @@ async def signup(data: UserCreate, db=Depends(get_database)):
                 )
 
         # Create PM request if preferred_pm_id was passed
-        if getattr(data, "preferred_pm_id", None):
+        pref_pm = str(data.preferred_pm_id).strip() if data.preferred_pm_id else None
+        if pref_pm and pref_pm.lower() not in ("none", "", "null"):
             try:
                 from app.services.team_capacity_service import create_member_request
                 await create_member_request(
                     db=db,
-                    pm_user_id=data.preferred_pm_id,
+                    pm_user_id=pref_pm,
                     candidate_user_id=user_id_str,
                     employee_id=created_emp_id,
                 )

@@ -375,6 +375,7 @@ async def notify_team_member_rejected(
     db,
     member_emp_id: str,
     pm_name: str,
+    reason: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     Triggered when a Team Member's PM request is rejected.
@@ -385,7 +386,8 @@ async def notify_team_member_rejected(
         return None
 
     title = "TEAM REQUEST UPDATE"
-    message = f"Your request to join {pm_name}'s team was not approved."
+    reason_str = f"\n\nReason: {reason}" if reason else ""
+    message = f"Your request to join {pm_name}'s team was not approved.{reason_str}"
     return await create_notification(
         db=db,
         user_id=target_uid,
@@ -394,4 +396,87 @@ async def notify_team_member_rejected(
         message=message,
         severity="medium",
     )
+
+
+async def notify_cross_pm_resource_requested(
+    db,
+    home_pm_user_id: str,
+    requesting_pm_name: str,
+    project_name: str,
+    candidate_name: str,
+    candidate_role: str,
+    task_title: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Triggered when PM1 requests a cross-PM candidate from PM2's direct team.
+    Recipient: Candidate's Home Project Manager (PM2).
+    """
+    task_info = f" for task '{task_title}'" if task_title else ""
+    title = "CROSS-PM RESOURCE ALLOCATION REQUEST"
+    message = (
+        f"{requesting_pm_name} has requested {candidate_name} ({candidate_role}) "
+        f"to contribute to project '{project_name}'{task_info}.\n\n"
+        f"Please review and approve or reject this project allocation."
+    )
+    return await create_notification(
+        db=db,
+        user_id=home_pm_user_id,
+        notification_type="CROSS_PM_RESOURCE_REQUESTED",
+        title=title,
+        message=message,
+        severity="medium",
+    )
+
+
+async def notify_cross_pm_resource_approved(
+    db,
+    requesting_pm_user_id: str,
+    candidate_name: str,
+    project_name: str,
+    approver_name: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Triggered when Home PM2 approves cross-PM resource allocation request.
+    Recipient: Requesting Project Manager (PM1).
+    """
+    title = "CROSS-PM RESOURCE APPROVED"
+    message = (
+        f"{approver_name} has approved the allocation of {candidate_name} "
+        f"for your project '{project_name}'."
+    )
+    return await create_notification(
+        db=db,
+        user_id=requesting_pm_user_id,
+        notification_type="CROSS_PM_RESOURCE_APPROVED",
+        title=title,
+        message=message,
+        severity="medium",
+    )
+
+
+async def notify_cross_pm_resource_rejected(
+    db,
+    requesting_pm_user_id: str,
+    candidate_name: str,
+    project_name: str,
+    approver_name: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Triggered when Home PM2 rejects cross-PM resource allocation request.
+    Recipient: Requesting Project Manager (PM1).
+    """
+    title = "CROSS-PM RESOURCE REJECTED"
+    message = (
+        f"{approver_name} was unable to approve the allocation of {candidate_name} "
+        f"for project '{project_name}' due to team capacity constraints."
+    )
+    return await create_notification(
+        db=db,
+        user_id=requesting_pm_user_id,
+        notification_type="CROSS_PM_RESOURCE_REJECTED",
+        title=title,
+        message=message,
+        severity="medium",
+    )
+
 
