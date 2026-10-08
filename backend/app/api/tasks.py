@@ -158,6 +158,24 @@ async def create_task(
         if project_id not in authorized_pids:
             raise HTTPException(status_code=403, detail="Access denied: Cannot create tasks in another PM's project")
 
+    # Authoritative task assignee validation
+    assignee_id = doc.get("assignee_id")
+    if assignee_id and project_id:
+        try:
+            emp = await db.employees.find_one({"_id": ObjectId(assignee_id)})
+        except Exception:
+            emp = None
+        if not emp:
+            raise HTTPException(status_code=404, detail="Assignee employee not found")
+
+        from app.services.project_scoping_service import is_employee_eligible_for_task
+        eligible = await is_employee_eligible_for_task(db, current_user, project_id, assignee_id)
+        if not eligible:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Task assignee is not authorized under your team capacity or project scope"
+            )
+
     doc["created_at"] = datetime.utcnow()
     doc["updated_at"] = datetime.utcnow()
     result = await db.tasks.insert_one(doc)
@@ -255,6 +273,24 @@ async def update_task(
         }
     else:
         update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+
+    # Authoritative task reassignment validation
+    new_assignee = update_data.get("assignee_id")
+    if new_assignee and new_assignee != old_assignee and project_id:
+        try:
+            emp = await db.employees.find_one({"_id": ObjectId(new_assignee)})
+        except Exception:
+            emp = None
+        if not emp:
+            raise HTTPException(status_code=404, detail="Assignee employee not found")
+
+        from app.services.project_scoping_service import is_employee_eligible_for_task
+        eligible = await is_employee_eligible_for_task(db, current_user, project_id, new_assignee)
+        if not eligible:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Task assignee is not authorized under your team capacity or project scope"
+            )
 
     update_data["updated_at"] = datetime.utcnow()
     await db.tasks.update_one({"_id": ObjectId(task_id)}, {"$set": update_data})

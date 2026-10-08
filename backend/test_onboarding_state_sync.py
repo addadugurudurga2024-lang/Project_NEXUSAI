@@ -315,7 +315,13 @@ async def run_tests():
         # Final cleanup of test candidates
         await db.users.delete_many({"email": {"$regex": "^candidate_"}})
         await db.employees.delete_many({"email": {"$regex": "^candidate_"}})
-        await db.team_memberships.delete_many({"$or": [{"candidate_email": {"$regex": "^candidate_"}}, {"email": {"$regex": "^candidate_"}}]})
+        await db.team_memberships.delete_many({
+            "$or": [
+                {"candidate_email": {"$regex": "^candidate_"}},
+                {"email": {"$regex": "^candidate_"}},
+                {"requested_by": {"$in": [tm1_id, tm2_id, tm3_id]}},
+            ]
+        })
 
     print("================================================================================")
     print(f"AUDIT SUMMARY: {test_passed} / {test_total} TESTS PASSED")

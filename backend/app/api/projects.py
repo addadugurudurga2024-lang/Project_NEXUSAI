@@ -98,6 +98,20 @@ async def create_project(
     db=Depends(get_database),
 ):
     doc = data.model_dump()
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+
+    # Validate PM Team Capacity scoping
+    if role == "project_manager":
+        from app.services.project_scoping_service import is_employee_authorized_for_pm
+        for member_id in doc.get("team_member_ids", []):
+            is_auth = await is_employee_authorized_for_pm(db, uid, str(member_id))
+            if not is_auth:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Access denied: Employee {member_id} is not in your active Team Capacity"
+                )
+
     doc["created_at"] = datetime.utcnow()
     doc["updated_at"] = datetime.utcnow()
     doc["created_by"] = str(current_user["_id"])
@@ -213,9 +227,22 @@ async def update_project(
             raise HTTPException(status_code=403, detail="Access denied: You cannot update another PM's project")
 
     old_manager_id = p.get("manager_id")
-    old_team_ids = set(p.get("team_member_ids", []))
+    old_team_ids = set(str(x) for x in p.get("team_member_ids", p.get("team_ids", [])))
 
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+
+    # Validate PM Team Capacity scoping on team member changes
+    if role == "project_manager" and "team_member_ids" in update_data:
+        from app.services.project_scoping_service import is_employee_authorized_for_pm
+        new_members = [str(x) for x in update_data["team_member_ids"]]
+        for member_id in set(new_members) - old_team_ids:
+            is_auth = await is_employee_authorized_for_pm(db, uid, member_id, project_id=project_id)
+            if not is_auth:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Access denied: Employee {member_id} is not in your active Team Capacity"
+                )
+
     update_data["updated_at"] = datetime.utcnow()
     await db.projects.update_one({"_id": ObjectId(project_id)}, {"$set": update_data})
     updated = await db.projects.find_one({"_id": ObjectId(project_id)})

@@ -233,8 +233,16 @@ async def update_issue(
             raise HTTPException(status_code=403, detail="Access denied: Cannot update another PM's issue")
 
     if role == "team_member":
-        emp = await db.employees.find_one({"$or": [{"user_id": uid}, {"email": current_user.get("email")}]})
-        if not emp or str(emp["_id"]) != old_assignee:
+        # Prioritize user_id match; fall back to email. old_assignee is the employee _id string.
+        emp_by_uid = await db.employees.find_one({"user_id": uid})
+        emp_by_email = await db.employees.find_one({"email": current_user.get("email")})
+        # Collect unique employee _id strings this user could be
+        candidate_emp_ids = set()
+        if emp_by_uid:
+            candidate_emp_ids.add(str(emp_by_uid["_id"]))
+        if emp_by_email:
+            candidate_emp_ids.add(str(emp_by_email["_id"]))
+        if not candidate_emp_ids or old_assignee not in candidate_emp_ids:
             raise HTTPException(status_code=403, detail="You can only update issues assigned to you")
         allowed_fields = {"status", "resolution"}
         update_data = {

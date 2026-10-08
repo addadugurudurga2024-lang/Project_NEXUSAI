@@ -268,7 +268,13 @@ const Tasks: React.FC = () => {
                   <label>Assignee</label>
                   <select name="assignee_id" value={form.assignee_id} onChange={handleChange}>
                     <option value="">Unassigned</option>
-                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    {(form.project_id
+                      ? employees.filter(e => {
+                          const proj = projects.find(p => p.id === form.project_id);
+                          return proj?.team_member_ids?.includes(e.id);
+                        })
+                      : employees
+                    ).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                   </select>
                 </div>
               </div>

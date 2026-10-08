@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import connect_db, close_db
-from app.api import auth, users, projects, employees, tasks, sprints, issues, predictions, employee_risk, documents, recommendations, resource_optimization, dashboard, reports, activities, analytics, ai_assistant, team_capacity, decisions, simulations
+from app.api import auth, users, projects, employees, tasks, sprints, issues, predictions, employee_risk, documents, recommendations, resource_optimization, dashboard, reports, activities, analytics, ai_assistant, team_capacity, decisions, simulations, prediction_tracking
 
 app = FastAPI(
     title="NexusAI API",
@@ -33,6 +33,14 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     await connect_db()
+    from app.db.database import get_database
+    from app.services.prediction_tracking_service import ensure_prediction_snapshots_initialized
+    try:
+        import asyncio
+        db = get_database()
+        asyncio.create_task(ensure_prediction_snapshots_initialized(db))
+    except Exception as e:
+        print(f"Warning: prediction snapshot initialization on startup: {e}")
 
 
 @app.on_event("shutdown")
@@ -61,6 +69,8 @@ app.include_router(ai_assistant.router, prefix="/ai-assistant", tags=["AI Assist
 app.include_router(team_capacity.router, prefix="/team-capacity", tags=["Team Capacity"])
 app.include_router(decisions.router, prefix="/decisions", tags=["Decision Intelligence"])
 app.include_router(simulations.router, prefix="/simulations", tags=["What-If Simulations"])
+app.include_router(prediction_tracking.router, prefix="/predictions", tags=["Prediction Outcome Tracking"])
+app.include_router(prediction_tracking.router, prefix="/prediction-tracking", tags=["Prediction Outcome Tracking"])
 
 
 @app.get("/")

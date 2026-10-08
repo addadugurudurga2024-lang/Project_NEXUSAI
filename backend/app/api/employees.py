@@ -104,6 +104,13 @@ async def update_employee(
         raise HTTPException(status_code=400, detail="Invalid employee ID")
     if not e:
         raise HTTPException(status_code=404, detail="Employee not found")
+    role = current_user.get("role", "team_member")
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, current_user)
+        if employee_id not in authorized_eids:
+            raise HTTPException(status_code=403, detail="Access denied: Employee not in your authorized scope")
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.utcnow()
     await db.employees.update_one({"_id": ObjectId(employee_id)}, {"$set": update_data})
@@ -117,6 +124,10 @@ async def delete_employee(
     current_user=Depends(require_manager_or_admin),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Access denied: Only administrators can delete employee profiles")
+
     try:
         result = await db.employees.delete_one({"_id": ObjectId(employee_id)})
     except Exception:
@@ -133,6 +144,18 @@ async def assign_project(
     current_user=Depends(require_manager_or_admin),
     db=Depends(get_database),
 ):
+    role = current_user.get("role", "team_member")
+    uid = str(current_user["_id"])
+
+    if role == "project_manager":
+        from app.services.project_scoping_service import get_authorized_project_ids, is_employee_authorized_for_pm
+        authorized_pids = await get_authorized_project_ids(db, current_user)
+        if project_id not in authorized_pids:
+            raise HTTPException(status_code=403, detail="Access denied: You do not manage this project")
+        is_auth = await is_employee_authorized_for_pm(db, uid, employee_id, project_id=project_id)
+        if not is_auth:
+            raise HTTPException(status_code=403, detail="Access denied: Employee is not in your authorized team capacity")
+
     try:
         await db.employees.update_one(
             {"_id": ObjectId(employee_id)},

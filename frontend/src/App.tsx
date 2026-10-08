@@ -21,6 +21,7 @@ import TeamCapacity from './pages/TeamCapacity';
 
 import Decisions from './pages/Decisions';
 import WhatIfSimulation from './pages/WhatIfSimulation';
+import PredictionTracking from './pages/PredictionTracking';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -73,6 +74,7 @@ function App() {
             <Route path="resource-optimization" element={<ManagerRoute><ResourceOptimization /></ManagerRoute>} />
             <Route path="what-if-simulation" element={<ManagerRoute><WhatIfSimulation /></ManagerRoute>} />
             <Route path="decisions" element={<ManagerRoute><Decisions /></ManagerRoute>} />
+            <Route path="prediction-tracking" element={<ManagerRoute><PredictionTracking /></ManagerRoute>} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="reports" element={<ManagerRoute><Reports /></ManagerRoute>} />
             <Route path="analytics" element={<ManagerRoute><Analytics /></ManagerRoute>} />

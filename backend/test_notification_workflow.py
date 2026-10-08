@@ -48,25 +48,57 @@ async def run_tests():
         token_pm2 = r_pm2.json()["access_token"]
         headers_pm2 = {"Authorization": f"Bearer {token_pm2}"}
 
+        # Find Sarah's user & PM1 team info first, then determine which member account to use
+        user_pm1 = await db.users.find_one({"email": "sarah@nexusai.dev"})
+        user_pm2 = await db.users.find_one({"email": "marcus.vance@nexusai.dev"})
+
+        # Pick an active Team Capacity member of PM1
+        pm1_mem = await db.team_memberships.find_one({"pm_user_id": str(user_pm1["_id"]), "status": "active"})
+        emp_member = await db.employees.find_one({"_id": ObjectId(pm1_mem["employee_id"])})
+        emp_member_id = str(emp_member["_id"])
+
+        # Find member1@nexusai.com's ACTUAL employee record (Alex Rivera)
+        member_login_email = "member1@nexusai.com"
+        user_member = await db.users.find_one({"email": member_login_email})
+        if user_member is None:
+            print(f"[FAIL] member1@nexusai.com user account not found in DB")
+            return False
+
+        # Find Alex Rivera's employee record by user_id or email
+        emp_member = await db.employees.find_one({"user_id": str(user_member["_id"])})
+        if emp_member is None:
+            emp_member = await db.employees.find_one({"email": member_login_email})
+        if emp_member is None:
+            print(f"[FAIL] No employee record found for member1@nexusai.com")
+            return False
+        emp_member_id = str(emp_member["_id"])
+
+        # Ensure PM1 has an active team_membership for this employee (add temporarily if missing)
+        existing_membership = await db.team_memberships.find_one({
+            "pm_user_id": str(user_pm1["_id"]),
+            "employee_id": emp_member_id,
+            "status": "active"
+        })
+        created_test_membership = False
+        if not existing_membership:
+            await db.team_memberships.insert_one({
+                "pm_user_id": str(user_pm1["_id"]),
+                "employee_id": emp_member_id,
+                "status": "active",
+                "role": "Senior Backend Engineer",
+                "joined_at": datetime.now(timezone.utc),
+                "_test_created": True,
+            })
+            created_test_membership = True
+
         # Login Member1 (Team Member)
-        r_member = await http.post("/auth/login", json={"email": "member1@nexusai.com", "password": "Password123!"})
+        r_member = await http.post("/auth/login", json={"email": member_login_email, "password": "Password123!"})
         if r_member.status_code != 200:
             print(f"[FAIL] Could not login Team Member: {r_member.text}")
             return False
         token_member = r_member.json()["access_token"]
         headers_member = {"Authorization": f"Bearer {token_member}"}
-
-        # Find Sarah's user & employee ID, and Member1's employee ID
-        user_pm1 = await db.users.find_one({"email": "sarah@nexusai.dev"})
-        user_pm2 = await db.users.find_one({"email": "marcus.vance@nexusai.dev"})
-        user_member = await db.users.find_one({"email": "member1@nexusai.com"})
         
-        emp_member = await db.employees.find_one({"$or": [{"email": "member1@nexusai.com"}, {"user_id": str(user_member["_id"])}]})
-        if not emp_member:
-            # Create or find employee for member1
-            emp_member = await db.employees.find_one({})
-        
-        emp_member_id = str(emp_member["_id"])
         print(f"[SETUP] PM1 User ID: {user_pm1['_id']}, PM2 User ID: {user_pm2['_id']}, Member Emp ID: {emp_member_id}")
 
         # Clear notifications for clean isolation
@@ -268,6 +300,9 @@ async def run_tests():
         await db.activities.delete_many({"project_id": project_id})
         await db.notifications.delete_many({"relatedProjectId": project_id})
         await db.notifications.delete_many({"related_project_id": project_id})
+        # Remove test-created membership if we added one
+        if created_test_membership:
+            await db.team_memberships.delete_one({"pm_user_id": str(user_pm1["_id"]), "employee_id": emp_member_id, "_test_created": True})
         return True
 
 

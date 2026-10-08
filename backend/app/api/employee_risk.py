@@ -160,6 +160,26 @@ async def _run_and_persist_prediction(employee_id: str, db) -> dict:
         upsert=True,
     )
 
+    # Record immutable prediction snapshot for outcome tracking & ML performance evaluation
+    try:
+        from app.services.prediction_tracking_service import record_prediction_snapshot
+        await record_prediction_snapshot(
+            db=db,
+            prediction_type="EMPLOYEE_BURNOUT",
+            model_name=burnout_result.get("model_name", "RandomForestClassifier"),
+            model_version=burnout_result.get("model_version", "1.0"),
+            prediction_value=burnout_result["risk_level"],
+            prediction_class=burnout_result["risk_level"],
+            prediction_numeric_value=burnout_result.get("risk_probability"),
+            prediction_unit="category",
+            features=features,
+            entity_id=employee_id,
+            entity_name=employee_name,
+            context={"factors": burnout_result.get("contributing_factors", []), "workload_stats": workload_stats},
+        )
+    except Exception as snap_err:
+        print(f"Warning: employee burnout snapshot recording failed: {snap_err}")
+
     # Generate notification for high risk (notify managers/admins)
     if burnout_result["risk_level"] == "HIGH":
         await db.notifications.insert_one({
@@ -182,6 +202,19 @@ async def _run_and_persist_prediction(employee_id: str, db) -> dict:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ROUTES
+async def _check_employee_access(db, employee_id: str, current_user: dict):
+    """Enforces authoritative PM / Team Member scoping on employee risk operations."""
+    role = current_user.get("role", "team_member")
+    if role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, current_user)
+        if str(employee_id) not in authorized_eids:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Employee not in your authorized scope"
+            )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 @router.get("/workload")
@@ -189,8 +222,17 @@ async def get_all_employee_workload(
     current_user=Depends(get_current_user),
     db=Depends(get_database),
 ):
-    """Get workload summary for all active employees."""
-    employees = await db.employees.find({"status": "active"}).to_list(200)
+    """Get workload summary for active employees scoped to current user."""
+    role = current_user.get("role", "team_member")
+    query = {"status": "active"}
+
+    if role in ("project_manager", "team_member"):
+        from app.services.project_scoping_service import get_authorized_employee_ids
+        authorized_eids = await get_authorized_employee_ids(db, current_user)
+        valid_objs = [ObjectId(x) for x in authorized_eids if ObjectId.is_valid(x)]
+        query["_id"] = {"$in": valid_objs} if valid_objs else {"_id": None}
+
+    employees = await db.employees.find(query).to_list(500)
     result = []
     for emp in employees:
         emp_id = str(emp["_id"])
@@ -217,6 +259,7 @@ async def predict_employee_burnout(
     db=Depends(get_database),
 ):
     """Run burnout risk prediction for an employee (canonical endpoint)."""
+    await _check_employee_access(db, employee_id, current_user)
     return await _run_and_persist_prediction(employee_id, db)
 
 
@@ -231,6 +274,7 @@ async def analyze_workload_risk(
     Frontend-facing alias for POST /employee/{employee_id}.
     Returns richer response including workload details for the UI panel.
     """
+    await _check_employee_access(db, employee_id, current_user)
     prediction = await _run_and_persist_prediction(employee_id, db)
 
     # Return the full enriched response for the frontend workload panel
@@ -265,6 +309,7 @@ async def get_employee_prediction(
     db=Depends(get_database),
 ):
     """Get the latest stored prediction for an employee."""
+    await _check_employee_access(db, employee_id, current_user)
     pred = await db.employee_risk_predictions.find_one({"employee_id": employee_id})
     if not pred:
         raise HTTPException(
@@ -286,6 +331,7 @@ async def get_employee_prediction_alias(
     Alias: GET /{employee_id}/latest
     Frontend calls this URL; maps to the canonical /employee/{employee_id}/latest.
     """
+    await _check_employee_access(db, employee_id, current_user)
     pred = await db.employee_risk_predictions.find_one({"employee_id": employee_id})
     if not pred:
         raise HTTPException(
@@ -304,6 +350,7 @@ async def get_employee_workload(
     db=Depends(get_database),
 ):
     """Get detailed workload for a specific employee."""
+    await _check_employee_access(db, employee_id, current_user)
     gathered = await _gather_employee_features(employee_id, db)
     employee = gathered["employee"]
     return {

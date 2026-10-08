@@ -158,6 +158,57 @@ async def predict_project_risk(
         upsert=True,
     )
 
+    # Record immutable prediction snapshots for outcome tracking & ML performance evaluation
+    try:
+        from app.services.prediction_tracking_service import record_prediction_snapshot
+        # 1. Project Risk Snapshot
+        await record_prediction_snapshot(
+            db=db,
+            prediction_type="PROJECT_RISK",
+            model_name=risk_result.get("model_name", "RandomForestClassifier"),
+            model_version=risk_result.get("model_version", "1.0"),
+            prediction_value=risk_result["risk_class"],
+            prediction_class=risk_result["risk_class"],
+            prediction_numeric_value=risk_result.get("risk_probability"),
+            prediction_unit="category",
+            features=features,
+            project_id=project_id,
+            project_name=project.get("name"),
+            context={"risk_factors": risk_result.get("contributing_factors", []), "risk_probability": risk_result.get("risk_probability")},
+        )
+        # 2. Deadline Delay Snapshot
+        await record_prediction_snapshot(
+            db=db,
+            prediction_type="DEADLINE_DELAY",
+            model_name=delay_result.get("model_name", "GradientBoostingRegressor"),
+            model_version=delay_result.get("model_version", "1.0"),
+            prediction_value=f"{delay_result['delay_days']} days",
+            prediction_numeric_value=float(delay_result["delay_days"]),
+            prediction_unit="days",
+            features=features,
+            project_id=project_id,
+            project_name=project.get("name"),
+            target_date=project.get("end_date"),
+            context={"delay_factors": delay_result.get("contributing_factors", []), "delay_probability": delay_result.get("delay_probability")},
+        )
+        # 3. Budget Overrun Snapshot
+        await record_prediction_snapshot(
+            db=db,
+            prediction_type="BUDGET_OVERRUN",
+            model_name=budget_result.get("model_name", "GradientBoostingRegressor"),
+            model_version=budget_result.get("model_version", "1.0"),
+            prediction_value=f"${budget_result['overrun_amount']:,.2f}",
+            prediction_numeric_value=float(budget_result["overrun_amount"]),
+            prediction_class=budget_result.get("overrun_risk"),
+            prediction_unit="USD",
+            features=features,
+            project_id=project_id,
+            project_name=project.get("name"),
+            context={"budget_factors": budget_result.get("contributing_factors", []), "predicted_final_cost": budget_result.get("predicted_final_cost")},
+        )
+    except Exception as snap_err:
+        print(f"Warning: prediction snapshot recording failed: {snap_err}")
+
     # Automatically generate / refresh actionable explainable recommendations
     try:
         await generate_project_recommendations(project_id, db)

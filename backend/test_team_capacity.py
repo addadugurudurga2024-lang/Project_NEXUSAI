@@ -88,19 +88,20 @@ async def run_tests():
         another_emp = await db.employees.find_one({"_id": {"$ne": test_emp["_id"]}})
         another_emp_id = str(another_emp["_id"])
 
+        # Sarah's dedicated 18 active team members
+        sarah_dedicated_mems = await db.team_memberships.find({"pm_user_id": pm1_id, "status": "active"}).to_list(100)
+
         # Helper: Reset PM1 team capacity in DB to a specific number of active members
         async def set_pm1_active_count(count: int):
             await db.team_memberships.delete_many({"pm_user_id": pm1_id})
-            # Find dummy/real employees excluding test candidate employees
-            emps = await db.employees.find({"_id": {"$nin": [test_emp["_id"], another_emp["_id"]]}}).to_list(100)
-            for i in range(min(count, len(emps))):
-                emp = emps[i]
+            for i in range(min(count, len(sarah_dedicated_mems))):
+                mem = sarah_dedicated_mems[i]
                 await db.team_memberships.insert_one({
                     "pm_user_id": pm1_id,
-                    "employee_id": str(emp["_id"]),
+                    "employee_id": mem["employee_id"],
                     "status": "active",
-                    "role": emp.get("role", "Engineer"),
-                    "skills": emp.get("skills", []),
+                    "role": mem.get("role", "Engineer"),
+                    "skills": mem.get("skills", []),
                     "requested_by": pm1_id,
                     "requested_at": datetime.now(timezone.utc),
                     "assigned_at": datetime.now(timezone.utc),
@@ -302,7 +303,9 @@ async def run_tests():
         pm1_pids = {p["id"] for p in r_proj_pm1.json()}
         pm2_pids = {p["id"] for p in r_proj_pm2.json()}
         assert len(pm1_pids.intersection(pm2_pids)) == 0
-        print("[PASS] Test 14: Existing RBAC and project scoping remain intact.")
+        # Clean up test memberships and restore Sarah's dedicated 18 memberships
+        await db.team_memberships.delete_many({"employee_id": {"$in": [test_emp_id, another_emp_id]}})
+        await set_pm1_active_count(18)
 
     print("============================================================")
     print("ALL 14 TEAM CAPACITY & ALLOCATION TESTS PASSED PERFECTLY!")

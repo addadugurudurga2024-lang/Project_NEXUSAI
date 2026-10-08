@@ -49,15 +49,13 @@ async def get_dashboard_summary(
         high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
         medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
     elif role == "project_manager":
-        # Scoped to PM's line-managed active team members and project participants
+        # Scoped strictly to PM's line-managed active Team Capacity members (Authoritative)
         active_mems = await db.team_memberships.find({"pm_user_id": uid, "status": "active"}).to_list(200)
         scoped_eids = [m["employee_id"] for m in active_mems]
-        project_eids = await get_authorized_employee_ids(db, current_user, projects=projects)
-        all_pm_eids = list(set(scoped_eids + project_eids))
 
-        total_employees = len(scoped_eids) if scoped_eids else len(project_eids)
-        if all_pm_eids:
-            burnout_preds = await db.employee_risk_predictions.find({"employee_id": {"$in": all_pm_eids}}).to_list(200)
+        total_employees = len(scoped_eids)
+        if scoped_eids:
+            burnout_preds = await db.employee_risk_predictions.find({"employee_id": {"$in": scoped_eids}}).to_list(200)
             high_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "HIGH")
             medium_burnout = sum(1 for p in burnout_preds if p.get("risk_level") == "MEDIUM")
         else:

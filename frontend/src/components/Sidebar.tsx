@@ -18,6 +18,7 @@ import {
   Bot,
   Scale,
   Sliders,
+  Target,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -103,6 +104,12 @@ const Sidebar: React.FC = () => {
           <NavLink to="/dashboard/decisions" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Scale size={20} />
             <span>Decision Log</span>
+          </NavLink>
+        )}
+        {isManager && (
+          <NavLink to="/dashboard/prediction-tracking" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Target size={20} />
+            <span>ML Tracking</span>
           </NavLink>
         )}
         {isManager && (
